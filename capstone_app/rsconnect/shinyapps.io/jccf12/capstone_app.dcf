@@ -1,0 +1,10 @@
+name: capstone_app
+title:
+username:
+account: jccf12
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3232001
+bundleId: 3860319
+url: https://jccf12.shinyapps.io/capstone_app/
+when: 1605368067.7338
