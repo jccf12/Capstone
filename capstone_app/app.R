@@ -7,6 +7,9 @@ library(xts)
 library(forecast)
 library(callr)
 library(pkgbuild)
+library(hash)
+
+max_plots <- 5
 
 algorithm_names <- c("Holt's Exponential Smoothing")
 load_quantlib_calendars('UnitedStates/NYSE',from='2000-01-01', to='2020-11-03')
@@ -14,39 +17,61 @@ load_quantlib_calendars('UnitedStates/NYSE',from='2000-01-01', to='2020-11-03')
 investing_options <- c("Apple", "Google")
 symbols <- c("AAPL", "GOOG")
 
+data <- hash()
+
 for (symbol in symbols) {
-  getSymbols(symbol, src = "yahoo")
+  data[symbol] <- getSymbols(symbol, src = "yahoo", auto.assign = FALSE)
 }
 
-
 ui <- fluidPage(
-  headerPanel('Header Panel'),
-  sidebarPanel(
-    "Inputs section title 1",
-    dateInput('start_date', 'Start date', value = "2019-01-01"),
-    dateInput('end_date', 'End date', value = "2019-12-31"),
-    checkboxGroupInput('selected_stocks', "Selected Stocks",
-                       investing_options),
-    numericInput('init_capital', 'Initial amount to invest ($MXN)', min = 0, value = 100)
-  ),
-  sidebarPanel(
-    "Inputs section title 2",
-    selectInput('forecast_alg', 'Holt Exponential Smoothing', algorithm_names),
-    numericInput('h_holt', 'Prediction Horizon', min = 1, value = 20)
-  ),
-  mainPanel(
-    plotOutput('plot1'),
-    plotOutput('plot2'),
-    plotOutput('plot3')
-  )
-)
+  tabsetPanel(
+    id = 'main-tabs',
+    tabPanel(
+      id = 'analysis-tab',
+      title = 'Análisis',
+      headerPanel('Análisis de datos'),
+      sidebarPanel(
+        "Selección de datos",
+      
+        dateInput('start_date', 'Fecha inicial', value = "2019-01-01"),
+        dateInput('end_date', 'Fecha final', value = "2019-12-31"),
+        checkboxGroupInput('selected_stocks', "Selección de stocks",
+                           symbols),
+        numericInput('init_capital', 'Capital de inversión inicial ($MXN)', min = 0, value = 100),
+        "Pronósticos",
+        selectInput('forecast_alg', 'Suavizamiento exponencial Holt Winters', algorithm_names),
+        numericInput('h_holt', 'Horizonte de Predicción', min = 1, value = 20)
+      ),
+      mainPanel(
+        id = 'inner-main-analysis',
+        tabsetPanel(
+          id = 'analysis-inner-tab',
+          tabPanel(
+            id = 'data-panel',
+            title = 'Datos',
+            tableOutput('table1'),
+            icon = icon("table")
+          ),
+          tabPanel(
+            id = 'visualization-panel',
+            title = 'Visualización',
+            uiOutput('plots'),
+            plotOutput('plot2'),
+            plotOutput('plot3'),
+            icon = icon("chart-line")
+          )
+        ) # <- end tabsetPanel 'analysis-inner-tab'
+      ) # <- end mainPanel 'inner-main-analysis'
+    ) # <-- end tabPanel 'analysis-tab'
+  ) # <-- end tabsetPanel 'main-tabs'
+) # <-- end fluid Page
 
 server <- function(input, output) {
   
   start_ranges <- reactive({
     c(
-      bizdays::bizdays(index(AAPL[1]), input$start_date, 'QuantLib/UnitedStates/NYSE')+1,
-      bizdays::bizdays(index(GOOG[1]), input$start_date, 'QuantLib/UnitedStates/NYSE')
+      bizdays::bizdays(index(data[['AAPL']][1]), input$start_date, 'QuantLib/UnitedStates/NYSE')+1,
+      bizdays::bizdays(index(data[['GOOG']][1]), input$start_date, 'QuantLib/UnitedStates/NYSE')
       )
   })
   
@@ -61,56 +86,60 @@ server <- function(input, output) {
     input$h_holt
   })
   
-  output$plot1 <- renderPlot({
-    
-  })
-  
-  output$plot1 <- renderPlot({
-    if (length(input$selected_stocks) > 0 ){
-      #Apple
-      if (is.element("Apple", input$selected_stocks)) {
-        fitted_stock <- HoltWinters(AAPL$AAPL.Adjusted[c(start_ranges()[2]:end_ranges()[2])], gamma=FALSE)
-        stock_forecast <- forecast:::forecast.HoltWinters(fitted_stock, h=selected_h())
-        point_predictions <- stock_forecast$mean
-        returns_aapl <- mapply(function(x,y) {(y-x)/x}, point_predictions, dplyr::lead(point_predictions,1))
-  
-        starting_aapl <- input$init_capital/length(input$selected_stocks)
-        current <- starting_aapl
-        portfolio_prediction_aapl <- c(starting_aapl)
-        for (return in returns_aapl) {
-          current <- current*(1+return)
-          portfolio_prediction_aapl <- append(portfolio_prediction_aapl, current)
-          print(portfolio_prediction_aapl)
-        }
-      } else {
-        portfolio_prediction_aapl = c(1:input$h_holt)*0
-      }
-      #Google
-      if (is.element("Google", input$selected_stocks)) {
-        fitted_stock <- HoltWinters(GOOG$GOOG.Adjusted[c(start_ranges()[2]:end_ranges()[2])], gamma=FALSE)
-        stock_forecast <- forecast:::forecast.HoltWinters(fitted_stock, h=selected_h())
-        point_predictions <- stock_forecast$mean
-        returns_goog <- mapply(function(x,y) {(y-x)/x}, point_predictions, dplyr::lead(point_predictions,1))
-        
-        starting_goog <- input$init_capital/length(input$selected_stocks)
-        current <- starting_goog
-        portfolio_prediction_goog <- c(starting_goog)
-        for (return in returns_goog) {
-          current <- current*(1+return)
-          portfolio_prediction_goog <- append(portfolio_prediction_goog, current)
-        }
-      } else {
-        portfolio_prediction_goog = c(1:input$h_holt)*0
-      }
-      print(portfolio_prediction_goog)
-      plot(portfolio_prediction_aapl+portfolio_prediction_goog)
+  output$table1 <- renderTable({
+    output_table1 <- NULL
+    for (symbol in input$selected_stocks) {
+      last2 <- tail(data[[symbol]],2)
+      names(last2) <- c("open","high","low","close","volume","adjusted")
+      diff_abs <- as.numeric(last2[2,"adjusted"])-as.numeric(last2[1,"adjusted"])
+      change_abs <- xts(diff_abs+0:0, order.by = as.Date(index(last2[2,]))+0:0)
+      diff_pct <- diff_abs/as.numeric(last2[1,"adjusted"])
+      change_pct <- xts(diff_pct+0:0, order.by = as.Date(index(last2[2,]))+0:0)
+      new_row <- cbind(last2[2,"adjusted"],change_abs,change_pct)
+      new_row_df <- data.frame(date = index(new_row), coredata(new_row))
+      new_row_df['symbol'] = symbol
+      names(new_row_df) <- c("Last Date","Last Price", "Change", "Change (%)", "Symbol")
+      new_row_df <- new_row_df[c("Symbol","Last Price", "Change", "Change (%)", "Last Date")]
+      output_table1 <- rbind(output_table1,new_row_df)
     }
+    return(output_table1)
   })
+  
+  output$plots <- renderUI({
+    plot_output_list <- lapply(1:input$n, function(i) {
+      plotname <- paste("plots", i, sep="")
+      plotOutput(plotname, height = 280, width = 250)
+    })
+    
+    # Convert the list to a tagList - this is necessary for the list of items
+    # to display properly.
+    do.call(tagList, plot_output_list)
+  })
+  
+  # Call renderPlot for each one. Plots are only actually generated when they
+  # are visible on the web page.
+  for (i in 1:max_plots) {
+    # Need local so that each item gets its own number. Without it, the value
+    # of i in the renderPlot() will be the same across all instances, because
+    # of when the expression is evaluated.
+    local({
+      my_i <- i
+      plotname <- paste("plots", my_i, sep="")
+      
+      output[[plotname]] <- renderPlot({
+        plot(1:my_i, 1:my_i,
+             xlim = c(1, max_plots),
+             ylim = c(1, max_plots),
+             main = paste("1:", my_i, ".  n is ", input$n, sep = "")
+        )
+      })
+    })
+  }
   
   output$plot2 <- renderPlot({
     if (length(input$selected_stocks) > 0 ) {
-      if (is.element("Apple", input$selected_stocks)) {
-        fitted_stock <- HoltWinters(AAPL$AAPL.Adjusted[c(start_ranges()[2]:end_ranges()[2])], gamma=FALSE)
+      if (is.element("AAPL", input$selected_stocks)) {
+        fitted_stock <- HoltWinters(data[['AAPL']]$AAPL.Adjusted[c(start_ranges()[2]:end_ranges()[2])], gamma=FALSE)
         stock_forecast <- forecast:::forecast.HoltWinters(fitted_stock, h=selected_h())
         forecast:::plot.forecast(stock_forecast, main = "Apple")
       }
@@ -119,8 +148,8 @@ server <- function(input, output) {
   
   output$plot3 <- renderPlot({
     if (length(input$selected_stocks) > 0 ) {
-      if (is.element("Google", input$selected_stocks)) {
-        fitted_stock <- HoltWinters(GOOG$GOOG.Adjusted[c(start_ranges()[2]:end_ranges()[2])], gamma=FALSE)
+      if (is.element("GOOG", input$selected_stocks)) {
+        fitted_stock <- HoltWinters(data[['GOOG']]$GOOG.Adjusted[c(start_ranges()[2]:end_ranges()[2])], gamma=FALSE)
         stock_forecast <- forecast:::forecast.HoltWinters(fitted_stock, h=selected_h())
         forecast:::plot.forecast(stock_forecast, main = "Google")
       }
