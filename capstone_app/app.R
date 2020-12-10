@@ -9,13 +9,12 @@ library(callr)
 library(pkgbuild)
 library(hash)
 
-max_plots <- 5
+max_plots <- 20
 
 algorithm_names <- c("Holt's Exponential Smoothing")
 load_quantlib_calendars('UnitedStates/NYSE',from='2000-01-01', to='2020-12-10')
 
-investing_options <- c("Apple", "Google")
-symbols <- c("AAPL", "GOOG", "ICON.L", "VOD.L")
+symbols <- scan("/Users/juan/Documents/GitHub/Capstone/capstone_app/data/top50_market_cap_usa_mex.txt", what = 'character')
 
 data <- hash()
 
@@ -40,14 +39,11 @@ ui <- fluidPage(
         dateInput('end_date', 'Fecha final', value = "2019-12-31"),
         tags$h1("Search Input"),
         br(),
-        searchInput(
-          inputId = "search_symbol", label = "Enter your text",
-          placeholder = "A placeholder",
-          btnSearch = icon("search"),
-          btnReset = icon("remove"),
-          width = "450px"
-        ),
+        helpText("Puedes econtrar los símbolos en la siguiente página"),
+        p(tags$a(href="https://es-us.finanzas.yahoo.com/acciones-mas-populares", "Finanzas Yahoo")),
         br(),
+        textInput("sym", "Symbol (Yahoo Finance!)", "AAPL"),
+        checkboxInput("seasonal","Use yearly seasonal factor:", TRUE),
         checkboxGroupInput('selected_stocks', "Selección de stocks",
                            symbols),
         numericInput('init_capital', 'Capital de inversión inicial ($MXN)', min = 0, value = 100),
