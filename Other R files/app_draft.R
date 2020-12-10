@@ -1,5 +1,4 @@
 library(shiny)
-
 max_plots <- 5
 
 ui <- fluidPage(

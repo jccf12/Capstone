@@ -12,16 +12,20 @@ library(hash)
 max_plots <- 5
 
 algorithm_names <- c("Holt's Exponential Smoothing")
-load_quantlib_calendars('UnitedStates/NYSE',from='2000-01-01', to='2020-11-03')
+load_quantlib_calendars('UnitedStates/NYSE',from='2000-01-01', to='2020-12-10')
 
 investing_options <- c("Apple", "Google")
-symbols <- c("AAPL", "GOOG")
+symbols <- c("AAPL", "GOOG", "ICON.L", "VOD.L")
 
 data <- hash()
 
 for (symbol in symbols) {
   data[symbol] <- getSymbols(symbol, src = "yahoo", auto.assign = FALSE)
 }
+
+# -----------------# -----------------# -----------------# -----------------# -----------------
+# -----------------# -----------------# _______UI________# -----------------# -----------------
+# -----------------# -----------------# -----------------# -----------------# -----------------
 
 ui <- fluidPage(
   tabsetPanel(
@@ -32,9 +36,18 @@ ui <- fluidPage(
       headerPanel('Análisis de datos'),
       sidebarPanel(
         "Selección de datos",
-      
         dateInput('start_date', 'Fecha inicial', value = "2019-01-01"),
         dateInput('end_date', 'Fecha final', value = "2019-12-31"),
+        tags$h1("Search Input"),
+        br(),
+        searchInput(
+          inputId = "search_symbol", label = "Enter your text",
+          placeholder = "A placeholder",
+          btnSearch = icon("search"),
+          btnReset = icon("remove"),
+          width = "450px"
+        ),
+        br(),
         checkboxGroupInput('selected_stocks', "Selección de stocks",
                            symbols),
         numericInput('init_capital', 'Capital de inversión inicial ($MXN)', min = 0, value = 100),
@@ -56,8 +69,6 @@ ui <- fluidPage(
             id = 'visualization-panel',
             title = 'Visualización',
             uiOutput('plots'),
-            plotOutput('plot2'),
-            plotOutput('plot3'),
             icon = icon("chart-line")
           )
         ) # <- end tabsetPanel 'analysis-inner-tab'
@@ -66,25 +77,23 @@ ui <- fluidPage(
   ) # <-- end tabsetPanel 'main-tabs'
 ) # <-- end fluid Page
 
+
+# ---------------------# ---------------------# ---------------------# ---------------------# ---------------------
+# ---------------------# ---------------------# _______SERVER________# ---------------------# --------------------- 
+# ---------------------# ---------------------# ---------------------# ---------------------# ---------------------
+
+
 server <- function(input, output) {
-  
-  start_ranges <- reactive({
-    c(
-      bizdays::bizdays(index(data[['AAPL']][1]), input$start_date, 'QuantLib/UnitedStates/NYSE')+1,
-      bizdays::bizdays(index(data[['GOOG']][1]), input$start_date, 'QuantLib/UnitedStates/NYSE')
-      )
-  })
-  
-  end_ranges <- reactive({
-    c(
-      start_ranges()[1] + bizdays::bizdays(input$start_date, input$end_date, 'QuantLib/UnitedStates/NYSE')-1,
-      start_ranges()[2] + bizdays::bizdays(input$start_date, input$end_date, 'QuantLib/UnitedStates/NYSE')-1
-    )
+
+  symbol <- reactive({
+    input$search
   })
   
   selected_h <- reactive({
     input$h_holt
   })
+  
+  # ____________________ DATOS ____________________
   
   output$table1 <- renderTable({
     output_table1 <- NULL
@@ -105,10 +114,12 @@ server <- function(input, output) {
     return(output_table1)
   })
   
+  # ____________________ VISUALIZACION ____________________
+  
   output$plots <- renderUI({
-    plot_output_list <- lapply(1:input$n, function(i) {
-      plotname <- paste("plots", i, sep="")
-      plotOutput(plotname, height = 280, width = 250)
+    plot_output_list <- lapply(1:length(input$selected_stocks), function(i) {
+      plotname <- paste("plot", i, sep="")
+      plotOutput(plotname, height = 380, width = 350)
     })
     
     # Convert the list to a tagList - this is necessary for the list of items
@@ -124,38 +135,20 @@ server <- function(input, output) {
     # of when the expression is evaluated.
     local({
       my_i <- i
-      plotname <- paste("plots", my_i, sep="")
-      
+      plotname <- paste("plot", my_i, sep="")
       output[[plotname]] <- renderPlot({
-        plot(1:my_i, 1:my_i,
-             xlim = c(1, max_plots),
-             ylim = c(1, max_plots),
-             main = paste("1:", my_i, ".  n is ", input$n, sep = "")
-        )
+        my_symbol <- input$selected_stocks[my_i]
+        my_col <- paste(my_symbol,"Adjusted",sep = ".")
+        
+        start_range <- bizdays::bizdays(index(data[[my_symbol]][1]), input$start_date, 'QuantLib/UnitedStates/NYSE')+1
+        end_range <- start_range + bizdays::bizdays(input$start_date, input$end_date, 'QuantLib/UnitedStates/NYSE')-1
+        
+        fitted_stock <- HoltWinters(data[[my_symbol]][,my_col][c(start_range:end_range)], gamma=FALSE)
+        stock_forecast <- forecast:::forecast.HoltWinters(fitted_stock, h=selected_h())
+        forecast:::plot.forecast(stock_forecast, main = my_symbol)
       })
     })
   }
-  
-  output$plot2 <- renderPlot({
-    if (length(input$selected_stocks) > 0 ) {
-      if (is.element("AAPL", input$selected_stocks)) {
-        fitted_stock <- HoltWinters(data[['AAPL']]$AAPL.Adjusted[c(start_ranges()[2]:end_ranges()[2])], gamma=FALSE)
-        stock_forecast <- forecast:::forecast.HoltWinters(fitted_stock, h=selected_h())
-        forecast:::plot.forecast(stock_forecast, main = "Apple")
-      }
-    }
-  })
-  
-  output$plot3 <- renderPlot({
-    if (length(input$selected_stocks) > 0 ) {
-      if (is.element("GOOG", input$selected_stocks)) {
-        fitted_stock <- HoltWinters(data[['GOOG']]$GOOG.Adjusted[c(start_ranges()[2]:end_ranges()[2])], gamma=FALSE)
-        stock_forecast <- forecast:::forecast.HoltWinters(fitted_stock, h=selected_h())
-        forecast:::plot.forecast(stock_forecast, main = "Google")
-      }
-    }
-    
-  })
   
 }
 
