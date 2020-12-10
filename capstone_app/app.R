@@ -21,7 +21,6 @@ data <- hash()
 for (symbol in symbols) {
   data[symbol] <- getSymbols(symbol, src = "yahoo", auto.assign = FALSE)
 }
-
 # -----------------# -----------------# -----------------# -----------------# -----------------
 # -----------------# -----------------# _______UI________# -----------------# -----------------
 # -----------------# -----------------# -----------------# -----------------# -----------------
@@ -35,6 +34,7 @@ ui <- fluidPage(
       headerPanel('Análisis de datos'),
       sidebarPanel(
         "Selección de datos",
+        dateInput("date", "Initial Date:", "2014-01-01", max="2016-01-01"),
         dateInput('start_date', 'Fecha inicial', value = "2019-01-01"),
         dateInput('end_date', 'Fecha final', value = "2019-12-31"),
         tags$h1("Search Input"),
@@ -134,14 +134,46 @@ server <- function(input, output) {
       plotname <- paste("plot", my_i, sep="")
       output[[plotname]] <- renderPlot({
         my_symbol <- input$selected_stocks[my_i]
-        my_col <- paste(my_symbol,"Adjusted",sep = ".")
+        mydf <- data[[my_symbol]][seq(as.Date(input$date), as.Date("2016-12-30"), "days")]
+        #mydf <- getSymbols(my_symbol, src = "yahoo", from = input$date, to = "2016-12-30", auto.assign = FALSE)
+        mydf <- data.frame(mydf[,6])
+        setDT(mydf, keep.rownames = TRUE)
+        colnames(mydf) <- c("ds", "y")
+        m <- prophet(mydf, yearly.seasonality = input$seasonal, weekly.seasonality = FALSE)
+        future <- make_future_dataframe(m, periods = 177)
+        forecast <- predict(m, future)
+        mydf2 <- data[[my_symbol]][seq(input$date, as.Date("2017-06-23"), "days")]
+        #mydf2 <- getSymbols(my_symbol, src = "yahoo", from = input$date, to = "2017-06-23", auto.assign = FALSE)
+        mydf2 <- data.frame(mydf2[,6])
+        colnames(mydf2) <- "Price"
+        mydf2$ds <- rownames(mydf2)
+        rownames(mydf2) <- NULL
+        mydf2$ds <- as.Date(mydf2$ds)
+        forecast$ds <- as.Date(forecast$ds)
+        perry = left_join(mydf2, forecast, by="ds")
+        rownames(perry) <- perry$ds
+        perry$PriceX <- perry$Price
+       
+        perry$Price[perry$ds > "2016-12-30"] = NA
+        perry$PriceX[perry$ds < "2017-01-01"] = NA
+      
+    
+        priceref = perry$Price[perry$ds == "2016-12-30"]
+        yhatend = tail(perry$yhat,1)
+        priceend = tail(perry$PriceX,1)
         
-        start_range <- bizdays::bizdays(index(data[[my_symbol]][1]), input$start_date, 'QuantLib/UnitedStates/NYSE')+1
-        end_range <- start_range + bizdays::bizdays(input$start_date, input$end_date, 'QuantLib/UnitedStates/NYSE')-1
+        theme_set(theme_gray(base_size = 18))
         
-        fitted_stock <- HoltWinters(data[[my_symbol]][,my_col][c(start_range:end_range)], gamma=FALSE)
-        stock_forecast <- forecast:::forecast.HoltWinters(fitted_stock, h=selected_h())
-        forecast:::plot.forecast(stock_forecast, main = my_symbol)
+        if (((yhatend>priceref) && (priceend>priceref)) | ((yhatend<priceref) && (priceend<priceref))) {
+          ggplot(perry, aes(x=ds)) + geom_point(aes(y=Price)) + geom_point(aes(y=PriceX), col="forestgreen", size=3) +
+            geom_line(aes(y=yhat)) + geom_ribbon(aes(ymin=yhat_lower, ymax=yhat_upper), fill="deepskyblue", alpha=0.5) +
+            geom_line(aes(y=priceref), cex=0.8, col="steelblue4") +
+            geom_vline(aes(xintercept=as.numeric(as.Date("2017-01-01"))), cex=0.8, col="steelblue4")}
+        else {
+          ggplot(perry, aes(x=ds)) + geom_point(aes(y=Price)) + geom_point(aes(y=PriceX), col="firebrick1", size=3) +
+            geom_line(aes(y=yhat)) + geom_ribbon(aes(ymin=yhat_lower, ymax=yhat_upper), fill="deepskyblue", alpha=0.5) +
+            geom_line(aes(y=priceref), cex=0.8, col="steelblue4") +
+            geom_vline(aes(xintercept=as.numeric(as.Date("2017-01-01"))), cex=0.8, col="steelblue4")}
       })
     })
   }
@@ -149,3 +181,13 @@ server <- function(input, output) {
 }
 
 shinyApp(ui = ui, server = server)
+
+#my_symbol <- input$selected_stocks[my_i]
+#my_col <- paste(my_symbol,"Adjusted",sep = ".")
+
+#start_range <- bizdays::bizdays(index(data[[my_symbol]][1]), input$start_date, 'QuantLib/UnitedStates/NYSE')+1
+#end_range <- start_range + bizdays::bizdays(input$start_date, input$end_date, 'QuantLib/UnitedStates/NYSE')-1
+
+#fitted_stock <- HoltWinters(data[[my_symbol]][,my_col][c(start_range:end_range)], gamma=FALSE)
+#stock_forecast <- forecast:::forecast.HoltWinters(fitted_stock, h=selected_h())
+#forecast:::plot.forecast(stock_forecast, main = my_symbol)

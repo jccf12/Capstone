@@ -21,3 +21,6 @@ p <- predict(m, 10, prediction.interval = TRUE)
 plot(m, p)
 
 ?HoltWinters
+
+aapl <- getSymbols("AAPL", src = "yahoo", from = "2016-01-01", to = Sys.Date(), auto.assign = FALSE)
+aapl[seq(as.Date("2016-08-17"), as.Date("2016-08-29"), "days")]
