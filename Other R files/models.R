@@ -16,6 +16,7 @@ plot(fitted)
 y_ts <- ts(y_xts, frequency = 20)
 plot(y_ts)
 
+?ts
 m <- HoltWinters(y_ts, gamma=TRUE)
 p <- predict(m, 10, prediction.interval = TRUE)
 plot(m, p)
