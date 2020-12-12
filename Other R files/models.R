@@ -25,3 +25,12 @@ plot(m, p)
 
 aapl <- getSymbols("AAPL", src = "yahoo", from = "2016-01-01", to = Sys.Date(), auto.assign = FALSE)
 aapl[seq(as.Date("2016-08-17"), as.Date("2016-08-29"), "days")]
+
+
+plot(aapl[,6])
+
+plot(yearlyReturn(aapl))
+sd(yearlyReturn(aapl))
+sd(monthlyReturn(aapl))
+monthlyReturn(aapl)
+gghistogram(monthlyReturn(aapl)) + geom_vline(xintercept=mean(monthlyReturn(aapl)),  lty=2)
