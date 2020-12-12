@@ -19,7 +19,7 @@ algorithm_names <- c("Holt's Exponential Smoothing","Prophet Time Series Model")
 risk_levels <- c('Manual Risk Portfolio', 'Low Risk Portfolio', 'Medium Risk Portfolio', 'High Risk Portfolio')
 load_quantlib_calendars('UnitedStates/NYSE',from='2000-01-01', to='2020-12-10')
 
-symbols <- scan("/Users/juan/Documents/GitHub/Capstone/capstone_app/data/top5_market_cap.txt", what = 'character')
+symbols <- scan("/Users/juan/Documents/GitHub/Capstone/capstone_app/data/top50_market_cap_usa_mex.txt", what = 'character')
 
 syms_lo_risk <- c()
 syms_me_risk <- c()
@@ -30,14 +30,16 @@ data <- hash()
 for (symbol in symbols) {
   data[symbol] <- getSymbols(symbol, src = "yahoo", auto.assign = FALSE)
   std <- sd(yearlyReturn(data[[symbol]]))
-  if ( std < 0.25 ) {
-    syms_lo_risk <- append(syms_lo_risk, symbol)
-  } 
-  else if (std >= 0.25 && 0.45 > std) {
-    syms_me_risk <- append(syms_me_risk, symbol)
-  }
-  else if (std >= 0.45) {
-    syms_hi_risk <- append(syms_hi_risk, symbol)
+  if (!is.na(std)) {
+    if ( std < 0.25 ) {
+      syms_lo_risk <- append(syms_lo_risk, symbol)
+    } 
+    else if (std >= 0.25 && 0.45 > std) {
+      syms_me_risk <- append(syms_me_risk, symbol)
+    }
+    else if (std >= 0.45) {
+      syms_hi_risk <- append(syms_hi_risk, symbol)
+    }
   }
 }
 
