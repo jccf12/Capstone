@@ -19,7 +19,7 @@ algorithm_names <- c("Holt's Exponential Smoothing","Prophet Time Series Model")
 risk_levels <- c('Manual Risk Portfolio', 'Low Risk Portfolio', 'Medium Risk Portfolio', 'High Risk Portfolio')
 load_quantlib_calendars('UnitedStates/NYSE',from='2000-01-01', to='2020-12-10')
 
-symbols <- scan("/Users/juan/Documents/GitHub/Capstone/capstone_app/data/top50_market_cap_usa_mex.txt", what = 'character')
+symbols <- scan("data/top50_market_cap_usa_mex.txt", what = 'character')
 
 syms_lo_risk <- c()
 syms_me_risk <- c()
