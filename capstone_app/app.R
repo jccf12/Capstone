@@ -1,7 +1,5 @@
 # app
 library(shiny)
-library(RQuantLib)
-library(bizdays)
 library(quantmod)
 library(xts)
 library(forecast)
@@ -10,6 +8,10 @@ library(pkgbuild)
 library(hash)
 library(grid)
 library(gridExtra)
+library(ggplot2)
+library(data.table)
+library(prophet)
+library(dplyr)
 
 max_plots <- 20
 
@@ -17,7 +19,6 @@ my_colors <- c("cornsilk3",'coral1','chocolate1','chartreuse4','chartreuse','cad
 
 algorithm_names <- c("Holt's Exponential Smoothing","Prophet Time Series Model")
 risk_levels <- c('Manual Risk Portfolio', 'Low Risk Portfolio', 'Medium Risk Portfolio', 'High Risk Portfolio')
-load_quantlib_calendars('UnitedStates/NYSE',from='2000-01-01', to='2020-12-10')
 
 symbols <- scan("data/top50_market_cap_usa_mex.txt", what = 'character')
 
@@ -56,6 +57,7 @@ ui <- fluidPage(
       headerPanel('Análisis de datos'),
       sidebarPanel(
         "Training period",
+        helpText("DO NOT CHOOSE WEEKEND DATES"),
         dateInput('start_date', 'Fecha inicial', value = "2016-01-01", max = Sys.Date()),
         dateInput('end_date', 'Fecha final', value = "2018-12-31", max = Sys.Date()),
         #tags$h1("Search Input"),
@@ -97,14 +99,21 @@ ui <- fluidPage(
       title = 'Portafolio',
       headerPanel("Mi Portafolio de Inversión"),
       sidebarPanel(
+        helpText("Choose a pre-defined portfolio composition based on the desired risk level or manually choose stocks "),
+        helpText("The risk level of a stock is assessed based on their anual volatility and the categorization in 'Low','Medium','High' is based Stockopedia Risk Ratings"),
+        p(tags$a(href="https://help.stockopedia.com/product-guide/stockranks/advanced/the-riskratings/", "Stockopedia Risk Ratings")),
         selectInput('risk_level', 'Nivel de riesgo', risk_levels),
         wellPanel(id = "checkbox_panel2",style = "overflow-y:scroll; max-height: 300px",
         checkboxGroupInput('selected_stocks_inv', "Selección de stocks en mi portafolio",
                            symbols)),
-        wellPanel(id = "checkbox_panel3",style = "overflow-y:scroll; max-height: 500px",
-                  uiOutput("portfolio_dist")),
+        helpText("Select an intial investing amount "),
         numericInput('init_capital', 'Capital de inversión inicial ($MXN)', min = 0, value = 100),
-        numericInput('h_inv', 'Horizonte de Predicción', min = 1, value = 60)
+        helpText("Select an prediction horizon"),
+        numericInput('h_inv', 'Horizonte de Predicción', min = 1, value = 60),
+        helpText("From top-to-bottom, assign the percentage of the intial investing capital that you wish to assign to each stock. Make sure you wait a few seconds so that the sliders below update to satisfy the constraint that the sum of the percentages is 100% "),
+        helpText("If you wish to assign a new distribution of percentages, make sure you always update from top-to-bottom and always allow for sldiers to update"),
+        wellPanel(id = "checkbox_panel3",style = "overflow-y:scroll; max-height: 500px",
+                  uiOutput("portfolio_dist"))
         ),
       mainPanel(
         id = 'inner-main-portfolio',
@@ -133,7 +142,7 @@ server <- function(input, output, session) {
   
   output$table1 <- renderTable({
     output_table1 <- NULL
-    for (symbol in input$selected_stocks_ana) {
+    for (symbol in symbols) {
       last2 <- tail(data[[symbol]],2)
       names(last2) <- c("open","high","low","close","volume","adjusted")
       diff_abs <- as.numeric(last2[2,"adjusted"])-as.numeric(last2[1,"adjusted"])
@@ -179,6 +188,7 @@ server <- function(input, output, session) {
         prophet_df <- data[[my_symbol]][seq(input$start_date, input$end_date, "days")]
         #prophet_df <- getSymbols(my_symbol, src = "yahoo", from = input$date, to = input$end_date, auto.assign = FALSE)
         prophet_df <- data.frame(prophet_df[,6])
+        
         setDT(prophet_df, keep.rownames = TRUE)
         colnames(prophet_df) <- c("ds", "y")
         m_prophet <- prophet(prophet_df, yearly.seasonality = input$seasonal, weekly.seasonality = FALSE)
@@ -211,8 +221,7 @@ server <- function(input, output, session) {
         graphset$Fitted<-c(rep(NA,  NROW(graphset)-(NROW(for_values) + NROW(fitted_values))),  fitted_values$value_fitted,  for_values$value_forecast)
         actual2_size <- NROW(graphset)-NROW(for_actual_values)
         graphset$Actual2<-c(graphset$Actual[1:actual2_size],  for_actual_values$value_actual)
-        
-        graphset.melt<-melt(graphset[, c('time', 'Actual2', 'Fitted')], id='time')
+        graphset.melt<-melt(setDT(graphset[, c("time", "Actual2", "Fitted")]), id='time')
       
         
         real_df <- data[[my_symbol]][seq(input$start_date, input$end_date+input$h_ana, "days")]
@@ -382,7 +391,7 @@ server <- function(input, output, session) {
             actual2_size <- NROW(graphset)-NROW(for_actual_values)
             graphset$Actual2<-c(graphset$Actual[1:actual2_size],  for_actual_values$value_actual)
             
-            graphset.melt<-melt(graphset[, c('time', 'Actual2', 'Fitted')], id='time')
+            graphset.melt<-melt(setDT(graphset[, c("time", "Actual2", "Fitted")]), id='time')
             graphset.melt
             
             real_df <- data[[symbol]][seq(input$start_date, input$end_date+input$h_inv, "days")]
