@@ -12,6 +12,7 @@ library(ggplot2)
 library(data.table)
 library(prophet)
 library(dplyr)
+library(shinycssloaders)
 
 max_plots <- 20
 
@@ -20,7 +21,7 @@ my_colors <- c("cornsilk3",'coral1','chocolate1','chartreuse4','chartreuse','cad
 algorithm_names <- c("Holt's Exponential Smoothing","Prophet Time Series Model")
 risk_levels <- c('Manual Risk Portfolio', 'Low Risk Portfolio', 'Medium Risk Portfolio', 'High Risk Portfolio')
 
-symbols <- scan("data/top50_market_cap_usa_mex.txt", what = 'character')
+symbols <- scan("data/top15_market_cap_usa_mex.txt", what = 'character')
 
 syms_lo_risk <- c()
 syms_me_risk <- c()
@@ -72,7 +73,8 @@ ui <- fluidPage(
         numericInput('h_ana', 'Horizonte de Predicción', min = 1, value = 60),
         wellPanel(id = "checkbox_panel1",style = "overflow-y:scroll; max-height: 300px",
                   checkboxGroupInput('selected_stocks_ana', "Selección de stocks para visualización",
-                           symbols, selected = symbols[1:1]))
+                           symbols, selected = symbols[1:1])),
+        actionButton("runAnalysisButton", "Run Analysis")
       ),
       mainPanel(
         id = 'inner-main-analysis',
@@ -106,6 +108,7 @@ ui <- fluidPage(
         wellPanel(id = "checkbox_panel2",style = "overflow-y:scroll; max-height: 300px",
         checkboxGroupInput('selected_stocks_inv', "Selección de stocks en mi portafolio",
                            symbols)),
+        actionButton('selectStocksButoon', 'Select Stocks'),
         helpText("Select an intial investing amount "),
         numericInput('init_capital', 'Capital de inversión inicial ($MXN)', min = 0, value = 100),
         helpText("Select an prediction horizon"),
@@ -161,10 +164,14 @@ server <- function(input, output, session) {
   
   # ____________________ VISUALIZACION ____________________
   
+  selected_stocks_ana <- eventReactive(input$runAnalysisButton,{
+    input$selected_stocks_ana
+    }) #<- end eventReactive
+  
   output$plots <- renderUI({
-    plot_output_list <- lapply(1:length(input$selected_stocks_ana), function(i) {
+    plot_output_list <- lapply(1:length(selected_stocks_ana()), function(i) {
       plotname <- paste("plot", i, sep="")
-      plotOutput(plotname, height = 400, width = 800)
+      plotOutput(plotname, height = 400, width = 800) %>% withSpinner(color="#0dc5c1")
     })
     
     # Convert the list to a tagList - this is necessary for the list of items
@@ -183,7 +190,7 @@ server <- function(input, output, session) {
       plotname <- paste("plot", my_i, sep="")
       output[[plotname]] <- renderPlot({
         
-        my_symbol <- input$selected_stocks_ana[my_i]
+        my_symbol <- selected_stocks_ana()[my_i]
         
         prophet_df <- data[[my_symbol]][seq(input$start_date, input$end_date, "days")]
         #prophet_df <- getSymbols(my_symbol, src = "yahoo", from = input$date, to = input$end_date, auto.assign = FALSE)
@@ -294,6 +301,10 @@ server <- function(input, output, session) {
     }
     
   })
+  
+  selected_stocks_inv <- eventReactive(input$selectStocksButton,{
+    input$selected_stocks_inv
+  }) #<- end eventReactive
   
   output$portfolio_dist <- renderUI({
     numStocks <- length(input$selected_stocks_inv)
