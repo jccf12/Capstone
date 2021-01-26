@@ -108,20 +108,21 @@ ui <- fluidPage(
         wellPanel(id = "checkbox_panel2",style = "overflow-y:scroll; max-height: 300px",
         checkboxGroupInput('selected_stocks_inv', "Selección de stocks en mi portafolio",
                            symbols)),
-        actionButton('selectStocksButoon', 'Select Stocks'),
+        actionButton('selectStocksButton', 'Select Stocks'),
         helpText("Select an intial investing amount "),
         numericInput('init_capital', 'Capital de inversión inicial ($MXN)', min = 0, value = 100),
         helpText("Select an prediction horizon"),
         numericInput('h_inv', 'Horizonte de Predicción', min = 1, value = 60),
-        helpText("From top-to-bottom, assign the percentage of the intial investing capital that you wish to assign to each stock. Make sure you wait a few seconds so that the sliders below update to satisfy the constraint that the sum of the percentages is 100% "),
-        helpText("If you wish to assign a new distribution of percentages, make sure you always update from top-to-bottom and always allow for sldiers to update"),
+        #helpText("From top-to-bottom, assign the percentage of the intial investing capital that you wish to assign to each stock. Make sure you wait a few seconds so that the sliders below update to satisfy the constraint that the sum of the percentages is 100% "),
+        #helpText("If you wish to assign a new distribution of percentages, make sure you always update from top-to-bottom and always allow for sldiers to update"),
         wellPanel(id = "checkbox_panel3",style = "overflow-y:scroll; max-height: 500px",
-                  uiOutput("portfolio_dist"))
+                  uiOutput("portfolio_dist")),
+        actionButton('finalizeDistribution', 'Finalize Sliders')
         ),
       mainPanel(
         id = 'inner-main-portfolio',
-        plotOutput("pie_chart"),
-        plotOutput("portfolio_forecast")
+        plotOutput("pie_chart") %>% withSpinner(color="#0dc5c1"),
+        plotOutput("portfolio_forecast") %>% withSpinner(color="#0dc5c1")
       ) # <- end mainPanel 'inner-main-portfolio
       
     ) # <-- end tabPanel 'protfolio-tab'
@@ -307,43 +308,75 @@ server <- function(input, output, session) {
   }) #<- end eventReactive
   
   output$portfolio_dist <- renderUI({
-    numStocks <- length(input$selected_stocks_inv)
+    numStocks <- length(selected_stocks_inv())
     if (numStocks > 0) {
       lapply(1:numStocks, function(i) {
-        sliderInput(paste("slider",i,sep=""),input$selected_stocks_inv[i],min =0, max=100, val =0)
+        sliderInput(paste("slider",i,sep=""),selected_stocks_inv()[i],min =0, max=100, val =100/numStocks)
       })
     }
   })
   
-  observe({
-    sum_dist <- 0
-    for (i in 1:length(input$selected_stocks_inv)){
+
+  # observe({
+  #   sum_dist <- 0
+  #   for (i in 1:length(input$selected_stocks_inv)){
+  #     slidername <- paste("slider",i,sep="")
+  #     current_val <- input_sliders()[[slidername]]
+  #     updateSliderInput(session, slidername, value = current_val, min = 0, max = 100 - sum_dist, step = 1)
+  #     sum_dist <- sum_dist+current_val
+  #   }
+  # })
+  
+  input_sliders <- eventReactive(input$finalizeDistribution, {
+    sliders <- hash()
+    sum_sliders <- 0
+    for (i in 1:length(selected_stocks_inv())) {
       slidername <- paste("slider",i,sep="")
-      current_val <- input[[slidername]]
-      updateSliderInput(session, slidername, value = current_val, min = 0, max = 100 - sum_dist, step = 1)
-      sum_dist <- sum_dist+current_val
+      val <- input[[slidername]]
+      sliders[[slidername]] <- val
+      sum_sliders <- sum_sliders+val
     }
+    for (i in 1:length(selected_stocks_inv())) {
+      slidername <- paste("slider",i,sep="")
+      sliders[[slidername]] <- sliders[[slidername]]/sum_sliders
+    }
+    return(sliders)
   })
+  
+  # df_distribution <- eventReactive(input$finalizeDistribution, {
+  #   distribution <- c()
+  #   for (i in 1:length(selected_stocks_inv())) {
+  #     slidername <- paste("slider",i,sep="")
+  #     val <- input_sliders()[[slidername]]
+  #     distribution <- append(distribution,val)
+  #   }
+  #   
+  #   distribution <- distribution/sum(distribution)
+  #   for (i in 1:length(input$selected_stocks_inv)){
+  #         slidername <- paste("slider",i,sep="")
+  #         current_val <- input_sliders()[[slidername]]
+  #         updateSliderInput(session, slidername, value = current_val/sum(distribution), min = 0, max = 100 , step = 1)
+  #       }
+  #   
+  #   df <- data.frame(
+  #     Stocks = selected_stocks_inv(),
+  #     portfolio_distribution = distribution
+  #   )
+  #   return(df)
+  # })
   
   output$pie_chart <-renderPlot({
     distribution <- c()
-    for (i in 1:length(input$selected_stocks_inv)) {
+    for (i in 1:length(selected_stocks_inv())) {
       slidername <- paste("slider",i,sep="")
-      val <- input[[slidername]]
+      val <- input_sliders()[[slidername]]
       distribution <- append(distribution,val)
     }
-    if (sum(distribution) < 100) {
-      df <- data.frame(
-      Stocks = append(input$selected_stocks_inv,"REMAINING"),
-      portfolio_distribution = append(distribution,100-sum(distribution))
-      )
-    } 
-    else {
-      df <- data.frame(
-      Stocks = input$selected_stocks_inv,
+    
+    df <- data.frame(
+      Stocks = selected_stocks_inv(),
       portfolio_distribution = distribution
-      )
-    }
+    )
     
     bp <- ggplot(df, aes(x="", y=portfolio_distribution, fill=Stocks))+ geom_bar(width = 1, stat = "identity")
     piechart <- bp + coord_polar("y", start=0)
@@ -351,14 +384,14 @@ server <- function(input, output, session) {
   })
   
   output$portfolio_forecast <- renderPlot({
-    numStocks <- length(input$selected_stocks_inv)
+    numStocks <- length(selected_stocks_inv())
     main_prophet_df <- FALSE
     main_holt_df <- FALSE
     if (numStocks > 0) {
       positive_stocks <- c()
-      for (i in 1:length(input$selected_stocks_inv)) {
+      for (i in 1:length(selected_stocks_inv())) {
         if (input[[paste("slider",i,sep = "")]] > 0) {
-          positive_stocks <- append(positive_stocks,input$selected_stocks_inv[i])
+          positive_stocks <- append(positive_stocks,selected_stocks_inv()[i])
         }
       }
       counter <- as.numeric(1)
@@ -482,16 +515,16 @@ server <- function(input, output, session) {
         #main_holt_df$combined <- main_holt_df$
         
         ggp1 <- ggp1 + 
-          geom_line(data = main_prophet_df, aes(y=combined_yhat), size=0.75, alpha=1, col='red3') + geom_ribbon(data = main_prophet_df,aes(ymin=combined_yhat_lower, ymax=combined_yhat_upper), fill="violetred2", alpha=0.4)+
-          geom_line(data = main_prophet_df, aes(y=combined_yhat/length(positive_stocks)), size=0.75, alpha=1, col='dodgerblue4') + geom_ribbon(data = main_prophet_df,aes(ymin=combined_yhat_lower/length(positive_stocks), ymax=combined_yhat_upper/length(positive_stocks)), fill="dodgerblue1", alpha=0.4)+
+          #geom_line(data = main_prophet_df, aes(y=combined_yhat/length(positive_stocks())), size=0.75, alpha=1, col='dodgerblue4') + geom_ribbon(data = main_prophet_df,aes(ymin=combined_yhat_lower/length(positive_stocks()), ymax=combined_yhat_upper/length(positive_stocks())), fill="dodgerblue1", alpha=0.4)+
           scale_x_date(date_breaks = "1 month", 
-           limits = c(input$end_date-min(as.numeric(input$end_date-input$start_date),input$h_inv), input$end_date+input$h_inv),
-           date_labels="%b-%Y" )
+                       limits = c(input$end_date-min(as.numeric(input$end_date-input$start_date),input$h_inv), input$end_date+input$h_inv),
+                       date_labels="%b-%Y" )
+        #geom_line(data = main_prophet_df, aes(y=combined_yhat), size=0.75, alpha=1, col='red3') + geom_ribbon(data = main_prophet_df,aes(ymin=combined_yhat_lower, ymax=combined_yhat_upper), fill="violetred2", alpha=0.4)
+        
         ggp2 <- ggp2 + 
-          geom_line(data = main_holt_df, aes(y=combined_fit),size=0.75, alpha=1, col='red3')+ geom_ribbon(data = main_holt_df, aes(ymin=combined_fit-combined_dev,  ymax=combined_fit + combined_dev),  alpha=0.4,  fill='violetred2')+
-          geom_line(data = main_holt_df, aes(y=combined_fit/length(positive_stocks)),size=0.75, alpha=1, col='dodgerblue4')+ geom_ribbon(data = main_holt_df, aes(ymin=combined_fit/length(positive_stocks)-combined_dev/length(positive_stocks),  ymax=combined_fit/length(positive_stocks) + combined_dev/length(positive_stocks)),  alpha=0.4,  fill='dodgerblue1')+
+          #geom_line(data = main_holt_df, aes(y=combined_fit/length(positive_stocks())),size=0.75, alpha=1, col='dodgerblue4')+ geom_ribbon(data = main_holt_df, aes(ymin=combined_fit/length(positive_stocks())-combined_dev/length(positive_stocks()),  ymax=combined_fit/length(positive_stocks()) + combined_dev/length(positive_stocks())),  alpha=0.4,  fill='dodgerblue1')+
           xlim(max(actual_values$time)-input$h_inv*(main_holt_df$time[2]-main_holt_df$time[1]),max(actual_values$time)+input$h_inv*(main_holt_df$time[2]-main_holt_df$time[1]))
-  
+        #geom_line(data = main_holt_df, aes(y=combined_fit),size=0.75, alpha=1, col='red3')+ geom_ribbon(data = main_holt_df, aes(ymin=combined_fit-combined_dev,  ymax=combined_fit + combined_dev),  alpha=0.4,  fill='violetred2')+
         
         return(grid.arrange(ggp1,ggp2, ncol=2, top = textGrob("Portfolio Forecasted",gp=gpar(fontsize=20,font=2)) ))
 
