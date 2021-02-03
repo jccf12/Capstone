@@ -390,7 +390,7 @@ server <- function(input, output, session) {
     if (numStocks > 0) {
       positive_stocks <- c()
       for (i in 1:length(selected_stocks_inv())) {
-        if (input[[paste("slider",i,sep = "")]] > 0) {
+        if (input_sliders()[[paste("slider",i,sep = "")]] > 0) {
           positive_stocks <- append(positive_stocks,selected_stocks_inv()[i])
         }
       }
@@ -455,7 +455,7 @@ server <- function(input, output, session) {
             joint_prophet_df$PriceX[joint_prophet_df$ds < input$end_date+1] = NA
             
             
-            multiplier <- input$init_capital*input[[paste("slider",counter,sep="")]]/(100*joint_prophet_df$PriceX[!is.na(joint_prophet_df$PriceX)][1])
+            multiplier <- input$init_capital*input_sliders()[[paste("slider",counter,sep="")]]/(100*joint_prophet_df$PriceX[!is.na(joint_prophet_df$PriceX)][1])
 
  
             if (typeof(main_prophet_df) == 'logical') {
