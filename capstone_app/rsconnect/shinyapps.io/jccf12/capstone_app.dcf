@@ -5,8 +5,8 @@ account: jccf12
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3232001
-bundleId: 3978325
+bundleId: 4093451
 url: https://jccf12.shinyapps.io/capstone_app/
-when: 1607751054.7167
+when: 1610595488.66773
 asMultiple: FALSE
 asStatic: FALSE
