@@ -15,12 +15,11 @@ library(dplyr)
 library(shinycssloaders)
 
 max_plots <- 20
-
-my_colors <- c("cornsilk3",'coral1','chocolate1','chartreuse4','chartreuse','cadetblue4','cadetblue','brown4','blueviolet','dodgerblue4','dodgerblue1','dimgray','deepskyblue1','deeppink4','deeppink','darkviolet','darkturquoise','darkslateblue','darkseagreen3','darkorchid','orange1','tomato1','olivedrab4','red4','red1','tan')
-
+my_colors <- c("cornsilk3",'coral1','chocolate1','chartreuse4','chartreuse','cadetblue4','cadetblue','brown4',
+               'blueviolet','dodgerblue4','dodgerblue1','dimgray','deepskyblue1','deeppink4','deeppink','darkviolet',
+               'darkturquoise','darkslateblue','darkseagreen3','darkorchid','orange1','tomato1','olivedrab4','red4','red1','tan')
 algorithm_names <- c("Holt's Exponential Smoothing","Prophet Time Series Model")
 risk_levels <- c('Manual Risk Portfolio', 'Low Risk Portfolio', 'Medium Risk Portfolio', 'High Risk Portfolio')
-
 symbols <- scan("data/top15_market_cap_usa_mex.txt", what = 'character')
 
 syms_lo_risk <- c()
@@ -52,6 +51,7 @@ for (symbol in symbols) {
 ui <- fluidPage(
   tabsetPanel(
     id = 'main-tabs',
+    
     tabPanel(
       id = 'analysis-tab',
       title = 'Análisis',
@@ -61,21 +61,19 @@ ui <- fluidPage(
         helpText("DO NOT CHOOSE WEEKEND DATES"),
         dateInput('start_date', 'Fecha inicial', value = "2016-01-01", max = Sys.Date()),
         dateInput('end_date', 'Fecha final', value = "2018-12-31", max = Sys.Date()),
-        #tags$h1("Search Input"),
-        #br(),
-        #helpText("Puedes econtrar los símbolos en la siguiente página"),
-        #p(tags$a(href="https://es-us.finanzas.yahoo.com/acciones-mas-populares", "Finanzas Yahoo")),
-        #br(),
-        #textInput("sym", "Symbol (Yahoo Finance!)", "AAPL"),
         checkboxInput("seasonal","Use yearly seasonal factor:", TRUE),
         "Pronósticos",
-        #selectInput('forecast_alg', 'Algoritmo de Predicción', algorithm_names),
         numericInput('h_ana', 'Horizonte de Predicción', min = 1, value = 60),
-        wellPanel(id = "checkbox_panel1",style = "overflow-y:scroll; max-height: 300px",
-                  checkboxGroupInput('selected_stocks_ana', "Selección de stocks para visualización",
-                           symbols, selected = symbols[1:1])),
+        wellPanel(id = "checkbox_panel1",
+                  style = "overflow-y:scroll; max-height: 300px",
+                  checkboxGroupInput('selected_stocks_ana', 
+                                     "Selección de stocks para visualización",
+                                      symbols, selected = symbols[1:1]
+                  )
+        ),
         actionButton("runAnalysisButton", "Run Analysis")
-      ),
+      ), # end sidebarPanel
+      
       mainPanel(
         id = 'inner-main-analysis',
         tabsetPanel(
@@ -102,8 +100,10 @@ ui <- fluidPage(
       headerPanel("Mi Portafolio de Inversión"),
       sidebarPanel(
         helpText("Choose a pre-defined portfolio composition based on the desired risk level or manually choose stocks "),
-        helpText("The risk level of a stock is assessed based on their anual volatility and the categorization in 'Low','Medium','High' is based Stockopedia Risk Ratings"),
-        p(tags$a(href="https://help.stockopedia.com/product-guide/stockranks/advanced/the-riskratings/", "Stockopedia Risk Ratings")),
+        helpText("The risk level of a stock is assessed based on their anual volatility and the categorization in 'Low',
+                 'Medium','High' is based Stockopedia Risk Ratings"),
+        p(tags$a(href="https://help.stockopedia.com/product-guide/stockranks/advanced/the-riskratings/", 
+                 "Stockopedia Risk Ratings")),
         selectInput('risk_level', 'Nivel de riesgo', risk_levels),
         wellPanel(id = "checkbox_panel2",style = "overflow-y:scroll; max-height: 300px",
         checkboxGroupInput('selected_stocks_inv', "Selección de stocks en mi portafolio",
@@ -113,8 +113,6 @@ ui <- fluidPage(
         numericInput('init_capital', 'Capital de inversión inicial ($MXN)', min = 0, value = 100),
         helpText("Select an prediction horizon"),
         numericInput('h_inv', 'Horizonte de Predicción', min = 1, value = 60),
-        #helpText("From top-to-bottom, assign the percentage of the intial investing capital that you wish to assign to each stock. Make sure you wait a few seconds so that the sliders below update to satisfy the constraint that the sum of the percentages is 100% "),
-        #helpText("If you wish to assign a new distribution of percentages, make sure you always update from top-to-bottom and always allow for sldiers to update"),
         wellPanel(id = "checkbox_panel3",style = "overflow-y:scroll; max-height: 500px",
                   uiOutput("portfolio_dist")),
         actionButton('finalizeDistribution', 'Finalize Sliders')
@@ -194,7 +192,6 @@ server <- function(input, output, session) {
         my_symbol <- selected_stocks_ana()[my_i]
         
         prophet_df <- data[[my_symbol]][seq(input$start_date, input$end_date, "days")]
-        #prophet_df <- getSymbols(my_symbol, src = "yahoo", from = input$date, to = input$end_date, auto.assign = FALSE)
         prophet_df <- data.frame(prophet_df[,6])
         
         setDT(prophet_df, keep.rownames = TRUE)
@@ -204,7 +201,6 @@ server <- function(input, output, session) {
         forecast_prophet <- predict(m_prophet, future_prophet)
         
         holt_df <- data[[my_symbol]][seq(input$start_date, input$end_date, "days")]
-        #prophet_df <- getSymbols(my_symbol, src = "yahoo", from = input$date, to = input$end_date, auto.assign = FALSE)
         holt_df <- data.frame(holt_df[,6])
         setDT(holt_df, keep.rownames = TRUE)
         colnames(holt_df) <- c("ds", "y")
@@ -315,18 +311,7 @@ server <- function(input, output, session) {
       })
     }
   })
-  
 
-  # observe({
-  #   sum_dist <- 0
-  #   for (i in 1:length(input$selected_stocks_inv)){
-  #     slidername <- paste("slider",i,sep="")
-  #     current_val <- input_sliders()[[slidername]]
-  #     updateSliderInput(session, slidername, value = current_val, min = 0, max = 100 - sum_dist, step = 1)
-  #     sum_dist <- sum_dist+current_val
-  #   }
-  # })
-  
   input_sliders <- eventReactive(input$finalizeDistribution, {
     sliders <- hash()
     sum_sliders <- 0
@@ -342,28 +327,6 @@ server <- function(input, output, session) {
     }
     return(sliders)
   })
-  
-  # df_distribution <- eventReactive(input$finalizeDistribution, {
-  #   distribution <- c()
-  #   for (i in 1:length(selected_stocks_inv())) {
-  #     slidername <- paste("slider",i,sep="")
-  #     val <- input_sliders()[[slidername]]
-  #     distribution <- append(distribution,val)
-  #   }
-  #   
-  #   distribution <- distribution/sum(distribution)
-  #   for (i in 1:length(input$selected_stocks_inv)){
-  #         slidername <- paste("slider",i,sep="")
-  #         current_val <- input_sliders()[[slidername]]
-  #         updateSliderInput(session, slidername, value = current_val/sum(distribution), min = 0, max = 100 , step = 1)
-  #       }
-  #   
-  #   df <- data.frame(
-  #     Stocks = selected_stocks_inv(),
-  #     portfolio_distribution = distribution
-  #   )
-  #   return(df)
-  # })
   
   output$pie_chart <-renderPlot({
     distribution <- c()
@@ -479,10 +442,19 @@ server <- function(input, output, session) {
             counter <- counter+1
         } # <- end for loop statement
         
-        ggp1 <- ggplot(main_prophet_df, aes(x=ds)) + geom_vline(aes(xintercept=as.Date(input$end_date+1)), cex=0.8, col="steelblue4")+
-                          ggtitle("Prophet's Time Series Forecasting")+ theme(plot.title = element_text(size = 15),legend.position="bottom")
-        ggp2 <- ggplot(main_holt_df,  aes(x=time)) + geom_vline(aes(xintercept=max(actual_values$time)),  lty=2) + 
-                          xlab('Time') + ylab('Value') +ggtitle("Holt Winters Exponential Smoothing")+ theme(plot.title = element_text(size = 15),legend.position="bottom")
+        ggp2 <- ggplot(main_prophet_df, aes(x=ds)) + 
+                geom_vline(aes(xintercept=as.Date(input$end_date+1)), cex=0.8, col="steelblue4") +
+                ggtitle("Prophet's Time Series Forecasting") + 
+                theme(plot.title = element_text(size = 15),legend.position="bottom")
+        
+        ggp2_copy <- ggp2
+        
+        ggp3 <- ggplot(main_holt_df,  aes(x=time)) + 
+                geom_vline(aes(xintercept=max(actual_values$time)),  lty=2) + 
+                xlab('Time') + 
+                ylab('Value') +
+                ggtitle("Holt Winters Exponential Smoothing") + 
+                theme(plot.title = element_text(size = 15),legend.position="bottom")
         
         color_counter <- 1
         
@@ -495,11 +467,16 @@ server <- function(input, output, session) {
         
         for (symbol in positive_stocks) {
           
-          ggp1 <- ggp1 + geom_point(aes(y=.data[[paste("Price",symbol,sep="")]]), size=0.5,alpha=0.5, col=my_colors[color_counter], shape=4) + geom_point(aes(y=.data[[paste("PriceX",symbol,sep="")]]), col=my_colors[color_counter], size=0.5, shape =4) +
-                          geom_line(aes(y=.data[[paste("yhat",symbol,sep="")]]), size=0.5, alpha=0.5, col=my_colors[color_counter]) + geom_ribbon(aes(ymin=.data[[paste("yhat_lower",symbol,sep="")]], ymax=.data[[paste("yhat_upper",symbol,sep="")]]), fill="deepskyblue", alpha=0.25)
+          ggp2 <- ggp2 + 
+                  geom_point(aes(y=.data[[paste("Price",symbol,sep="")]]), size=0.5,alpha=0.5, col=my_colors[color_counter], shape=4) +
+                  geom_point(aes(y=.data[[paste("PriceX",symbol,sep="")]]), col=my_colors[color_counter], size=0.5, shape =4) +
+                  geom_line(aes(y=.data[[paste("yhat",symbol,sep="")]]), size=0.5, alpha=0.5, col=my_colors[color_counter]) + 
+                  geom_ribbon(aes(ymin=.data[[paste("yhat_lower",symbol,sep="")]], ymax=.data[[paste("yhat_upper",symbol,sep="")]]), fill="deepskyblue", alpha=0.25)
           
-          ggp2 <- ggp2 + geom_point(aes(y=.data[[paste("Actual",symbol,sep="")]]), size=0.5,alpha=0.5, col=my_colors[color_counter], shape =4) +
-                          geom_line(aes(y=.data[[paste("Fitted", symbol,sep="")]]),size=0.5, alpha=0.5, col=my_colors[color_counter])+ geom_ribbon(aes(ymin=.data[[paste("Fitted",symbol,sep="")]]-.data[[paste("dev",symbol,sep="")]],  ymax=.data[[paste("Fitted",symbol,sep="")]] + .data[[paste("dev",symbol,sep="")]]),  alpha=0.25,  fill='green')
+          ggp3 <- ggp3 + 
+                  geom_point(aes(y=.data[[paste("Actual",symbol,sep="")]]), size=0.5,alpha=0.5, col=my_colors[color_counter], shape =4) +
+                  geom_line(aes(y=.data[[paste("Fitted", symbol,sep="")]]),size=0.5, alpha=0.5, col=my_colors[color_counter])+ 
+                  geom_ribbon(aes(ymin=.data[[paste("Fitted",symbol,sep="")]]-.data[[paste("dev",symbol,sep="")]],  ymax=.data[[paste("Fitted",symbol,sep="")]] + .data[[paste("dev",symbol,sep="")]]),  alpha=0.25,  fill='green')
                           
           color_counter <- color_counter+1
           
@@ -511,22 +488,21 @@ server <- function(input, output, session) {
           main_prophet_df$combined_yhat_upper <- main_prophet_df$combined_yhat_upper + main_prophet_df[[paste("yhat_upper",symbol,sep="")]]
         }
         
+  
+        ggp2_combined <- ggp2_copy+
+                         geom_line(data = main_prophet_df, aes(y=combined_yhat), size=0.75, alpha=1, col='red3') +
+                         geom_ribbon(data = main_prophet_df,aes(ymin=combined_yhat_lower, ymax=combined_yhat_upper), fill="violetred2", alpha=0.4)
         
-        #main_holt_df$combined <- main_holt_df$
+        ggp2_ind <- ggp2 + 
+                    scale_x_date(date_breaks = "1 month", limits = c(input$end_date-min(as.numeric(input$end_date-input$start_date),input$h_inv), input$end_date+input$h_inv), date_labels="%b-%Y" ) 
+      
+        ggp3 <- ggp3 + 
+                xlim(max(actual_values$time)-input$h_inv*(main_holt_df$time[2]-main_holt_df$time[1]),max(actual_values$time)+input$h_inv*(main_holt_df$time[2]-main_holt_df$time[1])) +
+                geom_line(data = main_holt_df, aes(y=combined_fit), size=0.75, alpha=1, col='red3') + 
+                geom_ribbon(data = main_holt_df, aes(ymin=combined_fit-combined_dev,  ymax=combined_fit + combined_dev),  alpha=0.4,  fill='violetred2')
         
-        ggp1 <- ggp1 + 
-          #geom_line(data = main_prophet_df, aes(y=combined_yhat/length(positive_stocks())), size=0.75, alpha=1, col='dodgerblue4') + geom_ribbon(data = main_prophet_df,aes(ymin=combined_yhat_lower/length(positive_stocks()), ymax=combined_yhat_upper/length(positive_stocks())), fill="dodgerblue1", alpha=0.4)+
-          scale_x_date(date_breaks = "1 month", 
-                       limits = c(input$end_date-min(as.numeric(input$end_date-input$start_date),input$h_inv), input$end_date+input$h_inv),
-                       date_labels="%b-%Y" )
-        #geom_line(data = main_prophet_df, aes(y=combined_yhat), size=0.75, alpha=1, col='red3') + geom_ribbon(data = main_prophet_df,aes(ymin=combined_yhat_lower, ymax=combined_yhat_upper), fill="violetred2", alpha=0.4)
-        
-        ggp2 <- ggp2 + 
-          #geom_line(data = main_holt_df, aes(y=combined_fit/length(positive_stocks())),size=0.75, alpha=1, col='dodgerblue4')+ geom_ribbon(data = main_holt_df, aes(ymin=combined_fit/length(positive_stocks())-combined_dev/length(positive_stocks()),  ymax=combined_fit/length(positive_stocks()) + combined_dev/length(positive_stocks())),  alpha=0.4,  fill='dodgerblue1')+
-          xlim(max(actual_values$time)-input$h_inv*(main_holt_df$time[2]-main_holt_df$time[1]),max(actual_values$time)+input$h_inv*(main_holt_df$time[2]-main_holt_df$time[1]))
-        #geom_line(data = main_holt_df, aes(y=combined_fit),size=0.75, alpha=1, col='red3')+ geom_ribbon(data = main_holt_df, aes(ymin=combined_fit-combined_dev,  ymax=combined_fit + combined_dev),  alpha=0.4,  fill='violetred2')+
-        
-        return(grid.arrange(ggp1,ggp2, ncol=2, top = textGrob("Portfolio Forecasted",gp=gpar(fontsize=20,font=2)) ))
+
+        return(grid.arrange(ggp2_combined,ggp2_ind, ggp3, ncol=2, top = textGrob("Portfolio Forecasted",gp=gpar(fontsize=20,font=2)) ))
 
       } # end 2nd if statement
     }# <- end 1st if statment
@@ -535,13 +511,3 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui = ui, server = server)
-
-#my_symbol <- input$selected_stocks_ana[my_i]
-#my_col <- paste(my_symbol,"Adjusted",sep = ".")
-
-#start_range <- bizdays::bizdays(index(data[[my_symbol]][1]), input$start_date, 'QuantLib/UnitedStates/NYSE')+1
-#end_range <- start_range + bizdays::bizdays(input$start_date, input$end_date, 'QuantLib/UnitedStates/NYSE')-1
-
-#fitted_stock <- HoltWinters(data[[my_symbol]][,my_col][c(start_range:end_range)], gamma=FALSE)
-#stock_forecast <- forecast:::forecast.HoltWinters(fitted_stock, h=selected_h())
-#forecast:::plot.forecast(stock_forecast, main = my_symbol)
