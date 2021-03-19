@@ -20,6 +20,9 @@ library(RColorBrewer)
 library(readr)
 library(shinythemes)
 
+?HoltWinters
+?prophet
+
 max_plots <- 20
 #my_colors <- c("cornsilk3",'coral1','chocolate1','chartreuse4','chartreuse','cadetblue4','cadetblue','brown4',
                #'blueviolet','dodgerblue4','dodgerblue1','dimgray','deepskyblue1','deeppink4','deeppink','darkviolet',
@@ -27,7 +30,8 @@ max_plots <- 20
 my_colors <- brewer.pal(n = 12, name = "Paired")
 algorithm_names <- c("Holt's Exponential Smoothing","Prophet Time Series Model")
 risk_levels <- c('Manual Risk Portfolio', 'Low Risk Portfolio', 'Medium Risk Portfolio', 'High Risk Portfolio')
-symbols <- scan("data/top50_market_cap_usa_mex.txt", what = 'character')
+seasonality_types <- c('additive','multiplicative')
+symbols <- scan("data/top50_market_cap_usa.txt", what = 'character')
 
 syms_lo_risk <- c()
 syms_me_risk <- c()

@@ -3,26 +3,91 @@ ui <- fluidPage(
   tabsetPanel(
     id = 'main-tabs',
     
-    #ANALISIS TAB
+    tabPanel(
+      id = 'landing-tab',
+      title = 'Home',
+      div(
+        column(width=2),
+        column(
+          h1('Welcome!',
+             style = "text-align:center;"),
+          div(
+              h4("Are interested in exploring investing opportunities in the stock market?
+                  Do you already know about the stock market but you would like to see if it is predictable?
+                  Do you just want to learn more about the stock market or prediction algoritghms?",
+                style="text-align:justify;line-height:1.6"),
+              h4(strong("Then, this is the right place for you!"),
+                style="text-align:center;line-height:1.6"),
+             style="color:white;background-color:#02A4D3;padding:15px;border-radius:10px"),
+          br(),
+          "It is possible that you have been curious about investing in the stock market, but you never really know how it works. 
+          Maybe you do have an idea how it works but you don't know if it's for you. Or maybe you are already an expert on it, and are already excited
+          about predicting the stock market, and you want to know what tools are out there that can help you with it. Whatever is the case for you, I hope that this site 
+          will be somehow useful for you.",
+          h2("What you will find here"),
+          column(
+            div(
+              h4("Analysis"),
+              p("In this tab, you will be able to explore up to 50 different of the biggest companies in Mexico and United States."),
+              p("You can look at the value of each their shares (which refer to a small fraction of the company) and how it was evolved through time."),
+              p("You will also be able to test two popular tools that have been used to make predictions of these share prices and compare them."),
+              style="color:black;background-color:lavender;padding:15px;border-radius:10px"
+            ),
+            width = 4,
+            style="padding:15px;border-radius:10px"
+          ),
+          column(
+            div(
+              h4("Portfolio"),
+              p("Here you will have an opportunity to create your own virtual portfolio ! A hypothetical one, of course, which means that you won't need to 
+              actually invest any money."),
+              p("You will be able to go 'back to the past' and see what would have happened if you had invested on some of these 50 companies. Would you have made money?
+              Would you have become rich? Or maybe you lost it all... Let's find out!"),
+              p("You can also use the tools that you explored in the Analysis tab to make predictions into the future! Again you can create whichever hypothetical porfolio
+              you like."),
+              style="color:black;background-color:lavender;padding:15px;border-radius:10px"
+            ),
+            style="padding:15px;border-radius:10px",
+            width = 4
+          ),
+          column(
+            div(
+              h4("About"),
+              p("On this page you can find more information about what happens 'under the hood' to generate the interactive graphs on the Analysis and Portfolio tabs."),
+              p("If you have time, I would suggest checking this page out before you dive into looking at the data and simulating portfolios."),
+              style="color:black;background-color:lavender;padding:15px;border-radius:10px"
+            ),
+            width = 4,
+            style="padding:15px;border-radius:10px"
+          ),
+          width = 8
+        )
+        
+        )
+    ),
+    
+    #ANALYSIS TAB
     tabPanel(
       id = 'analysis-tab',
-      title = 'Análisis',
-      headerPanel('Análisis de datos'),
+      title = 'Analysis',
+      headerPanel('Data Analysis'),
       sidebarPanel(
         "Training period",
         helpText("DO NOT CHOOSE WEEKEND DATES"),
-        dateInput('start_date_ana', 'Fecha inicial', value = "2018-01-01", max = Sys.Date()),
-        dateInput('end_date_ana', 'Fecha final', value = "2020-12-31", max = Sys.Date()),
-        checkboxInput("seasonal","Use yearly seasonal factor:", TRUE),
-        "Pronósticos",
-        numericInput('h_ana', 'Horizonte de Predicción', min = 1, value = 180),
+        dateInput('start_date_ana', 'Initial date', value = "2018-01-01", max = Sys.Date()),
+        dateInput('end_date_ana', 'End date', value = "2020-12-31", max = Sys.Date()),
+        numericInput('h_ana', 'Prediction Horizon', min = 1, value = 180),
         wellPanel(id = "checkbox_panel1",
                   style = "overflow-y:scroll; max-height: 300px",
                   checkboxGroupInput('selected_stocks_ana', 
-                                     "Selección de stocks para visualización",
+                                     "Stock selection for visualization",
                                      symbols, selected = symbols[1:1]
                   )
         ),
+        helpText("The two following inputs have to do with the seasonality component of the prediction algorithms. If you do not know
+                 what this means, don't worry! Just leave the pre-selected values. If you want to learn more about them, just visit the About tab!"),
+        checkboxInput("seasonal","Use yearly seasonal factor (both Prophet and Holt Winters)", TRUE),
+        selectInput('seasonal_type', 'Type of seasonal model used for the Holt Winters algorithm', seasonality_types),
         actionButton("runAnalysisButton", "Run Analysis"),
         width = 3
       ), # end sidebarPanel
@@ -33,13 +98,13 @@ ui <- fluidPage(
           id = 'analysis-inner-tabset',
           tabPanel(
             id = 'data-panel',
-            title = 'Datos',
+            title = 'Data',
             tableOutput('table1'),
             icon = icon("table")
           ),
           tabPanel(
             id = 'visualization-panel',
-            title = 'Visualización',
+            title = 'Visualization',
             br(),
             p("Each pair of graphs for each of the selected stocks, shows the historical data over the stock for the selected training period as well as a
               fitted model to the data. On the Prophet graph (on the left of each pair), the fitted model to the training data is shown in yellow. This model 
@@ -59,6 +124,8 @@ ui <- fluidPage(
                 style="text-align:justify;color:white;background-color:#02A4D3;padding:20px;border-radius:7px;font-size:1.2em;line-height: 1.8"),
             br(),
             uiOutput('plots'),
+            br(),
+            br(),
             icon = icon("chart-line")
           )
         ), # <- end tabsetPanel 'analysis-inner-tabset'
@@ -69,8 +136,8 @@ ui <- fluidPage(
     #PORTFOLIO TAB
     tabPanel(
       id = 'portfolio-tab',
-      title = 'Portafolio',
-      headerPanel("Mi Portafolio de Inversión"),
+      title = 'Portfolio',
+      headerPanel("My Virtual Portfolio"),
       sidebarPanel(
         helpText("Choose a pre-defined portfolio composition based on the desired risk level or manually choose stocks you wish to be in your portfolio."),
         helpText("The risk level of a stock is assessed based on their anual volatility and the categorization in 'Low',
@@ -79,20 +146,24 @@ ui <- fluidPage(
                  "Stockopedia Risk Ratings")),
         selectInput('risk_level', 'Nivel de riesgo', risk_levels),
         wellPanel(id = "checkbox_panel2",style = "overflow-y:scroll; max-height: 300px",
-                  checkboxGroupInput('selected_stocks_inv', "Selección de stocks en mi portafolio",
+                  checkboxGroupInput('selected_stocks_inv', "Selección de stocks en mi Portfolio",
                                      symbols)),
         actionButton('selectStocksButton', 'Select Stocks'),
         helpText("Select an intial investing amount "),
-        numericInput('init_capital', 'Capital de inversión inicial ($MXN)', min = 0, value = 100),
+        numericInput('init_capital', 'Initial Investment Amount ($USD)', min = 0, value = 100),
         "Training data",
         helpText("DO NOT CHOOSE WEEKEND DATES"),
-        dateInput('start_date_port', 'Fecha inicial', value = "2018-01-01", max = Sys.Date()),
-        dateInput('end_date_port', 'Fecha final', value = "2020-12-31", max = Sys.Date()),
+        dateInput('start_date_port', 'Start Date', value = "2018-01-01", max = Sys.Date()),
+        dateInput('end_date_port', 'End Date', value = "2020-12-31", max = Sys.Date()),
         helpText("Select a prediction horizon. This is the number of days into the future for which you want to see the evolution of the selected portfolio."),
-        numericInput('h_portafolio', 'Horizonte de Predicción', min = 1, value = 60),
+        numericInput('h_Portfolio', 'Horizonte de Predicción', min = 1, value = 60),
         wellPanel(id = "checkbox_panel3",style = "overflow-y:scroll; max-height: 500px",
                   uiOutput("portfolio_dist")),
-        actionButton('runPortafolio', 'Run Portafolio'),
+        helpText("The two following inputs that have to do with the seasonality component of the prediction algorithms. If you do not know
+                 what this means, don't worry! Just leave the pre-selected values. If you want to learn more about them, just visit the About tab!"),
+        checkboxInput("seasonal2","Use yearly seasonal factor (both Prophet and Holt Winters)", TRUE),
+        selectInput('seasonal_type2', 'Type of seasonal model used for the Holt Winters algorithm', seasonality_types),
+        actionButton('runPortfolio', 'Run Portfolio'),
         width = 3
         ),
       mainPanel(
@@ -102,7 +173,7 @@ ui <- fluidPage(
         helpText("Hover over the slices on the pie chart above to see the exact percentage of your portfolio assigned to each of the individual stocks", style="text-align:center"),
         br(),
         p("The top two graphs below show the evolution of your portfolio over the prediction horizon. This means that whatever the amount that you chose to start with 
-          ('Capital de Inversión Inicial), if you were to invest it on the selected stocks and selected portions of that amount (shown on the pie chart), would change
+          (Initial Investment Amount ($USD)), if you were to invest it on the selected stocks and selected portions of that amount (shown on the pie chart), would change
           as shown by the black dots on the top two graphs below. Each of those graphs, also shows you what each of the models would tell you it would happen.", style = "font-size:1.1em;line-height: 1.8"),
         div(tags$ul("There are three things you should focus on what is shown in the figure below:",
            tags$li("The actual evolution of the selected porfolio shown in black in either of the top two graphs. This shows what would have",
@@ -164,11 +235,11 @@ ui <- fluidPage(
           fluidRow(column(
             width=2),
             column(
-              p("In this tab, you will be able to look at the price of different stocks. At first, under the 'Datos' tab, you will see a general overview in the form
+              p("In this tab, you will be able to look at the price of different stocks. At first, under the 'Data' tab, you will see a general overview in the form
                 of a table that shows the current price of the stock and the % change in the last day, which means by what percentage the price
                 of the stock changed in the last day. For example, if Apple's stock was valued at $100 yesterday, and today is valued at $102,
                 the % change will show 2%, because the increase of $2 represents 2% of the price yesterday."),
-              p("Under the tab 'Visualizacion', you can now see the", em("historical data"), "of the stocks that you can choose using the sidebar Panel.
+              p("Under the tab 'Visualization', you can now see the", em("historical data"), "of the stocks that you can choose using the sidebar Panel.
                 On the sidebar panel you will also be able to select the", em("training period"),". The training period will determine the historical data
                 that is given to the models for predictions. This application uses Prophet's Time Series Forecasting by Facebook and Holt Winters Exponential
                 Smoothing. To better understand how these models work, refer to the tabs 'Prophet' and 'Holt'."),

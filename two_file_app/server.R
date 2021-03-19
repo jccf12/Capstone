@@ -47,6 +47,9 @@ server <- function(input, output, session) {
   input_seasonal <- eventReactive(input$runAnalysisButton, {
     return(input$seasonal)
   })
+  input_seasonal_type <- eventReactive(input$runAnalysisButton, {
+    return(input$seasonal_type)
+  })
   
   output$plots <- renderUI({
     plot_output_list <- lapply(1:length(selected_stocks_ana()), function(i) {
@@ -90,7 +93,7 @@ server <- function(input, output, session) {
         y_actual <- all_data_df$y #storing actual y values into array
         
         #PROPHET
-        prophet_model <- prophet(training_df, yearly.seasonality = input$seasonal, weekly.seasonality = FALSE)
+        prophet_model <- prophet(training_df, yearly.seasonality = input_seasonal(), weekly.seasonality = FALSE)
         future_prophet <- make_future_dataframe(prophet_model, periods = h_ana()) #data frame with future dates for forecasting
         #the following line use the model to forecast and fill in the future dataframe. Future prophet has several columns that contain information about
         #the prediction and the model. The relevant columns for this app are: ds, yhat_lower, yhat_upper, yhat
@@ -125,10 +128,9 @@ server <- function(input, output, session) {
         prophet_df$yhat_lower_test[prophet_df$ds < end_date_ana()+1] = NA
         
         #HOLT WINTERS
-        data_length <- as.integer(end_date_ana() - start_date_ana())/365.25 #data length in years of the training data
+        data_length <- as.integer(end_date_ana() - start_date_ana())/365.25 #data length in number of years of the training data
         holt_ts <- ts(training_df$y, frequency = as.integer(nrow(training_df)/data_length)) #time series of the training data to use HoltWinters method
-        
-        holt_model <-HoltWinters(holt_ts)
+        holt_model <-HoltWinters(holt_ts, gamma = input_seasonal(), seasonal = input_seasonal_type())
         forecast_holt <- predict(holt_model, n.ahead = h_ana(),  prediction.interval=T,  level=.95)
         forecast_holt <- data.frame(ds = seq(end_date_ana()+1, end_date_ana()+h_ana(),"days"), 
                                     yhat = as.data.frame(forecast_holt)$fit, 
@@ -163,15 +165,21 @@ server <- function(input, output, session) {
         min_y <- min(min(holt_df$y_train[!is.na(holt_df$y_train)]),min(prophet_df$y_train[!is.na(holt_df$y_train)]))
         max_y <- max(max(holt_df$yhat_upper[!is.na(holt_df$yhat_upper)]),max(prophet_df$yhat_upper[!is.na(prophet_df$yhat_upper)]))
         
-        prophet_ana_plot <- ggplot(prophet_df, aes(x=ds)) + 
-          geom_point(aes(y=y_train), col="#c269f5", size=0.3) +
-          geom_line(aes(y=y_train), col="#c269f5", size=0.3, alpha=0.7) +
-          geom_point(aes(y=y_test), col="#8e69f5", size=0.3) +
-          geom_line(aes(y=y_test), col="#8e69f5", size=0.3, alpha=0.7) +
-          geom_line(aes(y=yhat_train), col="#edb83e",size = 0.5) + 
+      
+        prophet_df_readable <- data.frame(prophet_df)
+        colnames(prophet_df_readable) <- c("Date","Lower Bound y", "Upper Bound y", "yhat", "y", "Actual Price ($)", "Actual Future Price ($)", "Predicted ($)", "Fitted ($)","Lower Bound", "Upper Bound")
+        print(tail(prophet_df_readable))
+        print(tail(prophet_df))
+        print('separation')
+        print(colnames(prophet_df))
+        print(colnames(holt_df))
+        prophet_ana_plot <- ggplot(prophet_df_readable, aes(x=`Date`)) +
+          geom_line(aes(y=`Actual Price ($)`), col="#c269f5", size=0.5, alpha=0.7) +
+          geom_line(aes(y=`Actual Future Price ($)`), col="#8e69f5", size=0.5, alpha=0.7) +
+          geom_line(aes(y=`Fitted ($)`), col="#edb83e",size = 0.5) +
           #geom_ribbon(aes(ymin=yhat_lower_train, ymax=yhat_upper_train), fill="#edb83e", alpha=0.5) +
-          geom_line(aes(y=yhat_test), col="#ed8d3e",size = 0.5) + 
-          geom_ribbon(aes(ymin=yhat_lower_test, ymax=yhat_upper_test), fill="#ed8d3e", alpha=0.5) +
+          geom_line(aes(y=`Predicted ($)`), col="#ed8d3e",size = 0.5) +
+          geom_ribbon(aes(ymin=`Lower Bound`, ymax=`Upper Bound`), fill="#ed8d3e", alpha=0.5) +
           geom_hline(aes(yintercept=prediction_start), cex=0.3, col="steelblue4", linetype = "dashed") +
           geom_vline(aes(xintercept=as.numeric(as.Date(end_date_ana()+1))), cex=0.3, col="steelblue4", linetype = "dashed")+
           ylim(min_y,max_y)
@@ -190,18 +198,24 @@ server <- function(input, output, session) {
             )
           )
         
-        holt_ana_plot <- ggplot(holt_df,  aes(x=ds)) +
-          geom_point(aes(y=y_train), col="#c269f5", size = 0.5) +
-          geom_line(aes(y=y_train), col="#c269f5", size = 0.5) +
-          geom_point(aes(y=y_test), col="#8e69f5", size=0.3) +
-          geom_line(aes(y=y_test), col="#8e69f5", size=0.3, alpha=0.7) +
-          geom_line(aes(y=yhat_train), col="#69aaf5",size = 0.5) +
-          geom_line(aes(y=yhat_test), col="#1c5bba") +
-          geom_ribbon(aes(ymin=yhat_lower,  ymax=yhat_upper), fill='#1c5bba', alpha=0.5) + 
-          geom_hline(aes(yintercept=prediction_start), cex=0.3, col="steelblue4", linetype = "dashed") + 
+        holt_df_readable <- data.frame(holt_df)
+        colnames(holt_df_readable) <- c("Date","y", "yhat","Lower Bound", "Upper Bound", "Actual Price ($)", "Actual Future Price ($)", "Predicted ($)", "Fitted ($)")
+        holt_ana_plot <- ggplot(holt_df_readable,  aes(x=`Date`)) +
+          geom_line(aes(y=`Actual Price ($)`), col="#c269f5", size = 0.5) +
+          geom_line(aes(y=`Actual Future Price ($)`), col="#8e69f5", size=0.5, alpha=0.7) +
+          geom_line(aes(y=`Fitted ($)`), col="#69aaf5",size = 0.5) +
+          geom_line(aes(y=`Predicted ($)`), col="#1c5bba") +
+          geom_ribbon(aes(ymin=`Lower Bound`,  ymax=`Upper Bound`), fill='#1c5bba', alpha=0.5) +
+          geom_hline(aes(yintercept=prediction_start), cex=0.3, col="steelblue4", linetype = "dashed") +
           geom_vline(aes(xintercept=as.numeric(as.Date(end_date_ana()+1))), cex=0.3, col='steelblue4', linetype = "dashed")+
-          ylim(min_y,max_y)
-        
+          ylim(min_y,max_y) +
+          #scale_colour_manual(values=c("#c269f5","#8e69f5","#69aaf5","#1c5bba"))+
+          # scale_color_identity(name = "Model fit",
+          #                    breaks = c("#c269f5"),
+          #                    labels = c("Actual Price ($)"),
+          #                    guide = "legend")+
+          theme(legend.position="bottom")
+
         ply_holt_ana <- ggplotly(holt_ana_plot) %>% layout(
           xaxis = list(
             title = "Date",
@@ -249,7 +263,7 @@ server <- function(input, output, session) {
   } #<- end for loop max_plots
   
   # _______________________________________________________________________________________________________________________
-  # ___________________________________________________MI PORTAFOLIO_______________________________________________________
+  # ___________________________________________________MI Portfolio_______________________________________________________
   # _______________________________________________________________________________________________________________________
   
   observe({
@@ -274,7 +288,7 @@ server <- function(input, output, session) {
   })
   
   #the following variables will be updated every time the selectStocksButton is clicked
-  input_sliders <- eventReactive(input$runPortafolio, {
+  input_sliders <- eventReactive(input$runPortfolio, {
     sliders <- hash()
     sum_sliders <- 0
     for (i in 1:length(selected_stocks_inv())) {
@@ -289,17 +303,23 @@ server <- function(input, output, session) {
     }
     return(sliders)
   })
-  input_init_capital <- eventReactive(input$runPortafolio, {
+  input_init_capital <- eventReactive(input$runPortfolio, {
     return(input$init_capital)
   })
-  start_date_port <- eventReactive(input$runPortafolio, {
+  start_date_port <- eventReactive(input$runPortfolio, {
     return(input$start_date_port)
   })
-  end_date_port <- eventReactive(input$runPortafolio, {
+  end_date_port <- eventReactive(input$runPortfolio, {
     return(input$end_date_port)
   })
-  h_portafolio <- eventReactive(input$runPortafolio, {
-    return(input$h_portafolio)
+  h_Portfolio <- eventReactive(input$runPortfolio, {
+    return(input$h_Portfolio)
+  })
+  input_seasonal2 <- eventReactive(input$runPortfolio, {
+    return(input$seasonal2)
+  })
+  input_seasonal_type2 <- eventReactive(input$runPortfolio, {
+    return(input$seasonal_type2)
   })
   
   #Initializing Sliders based on selected_stocks_inv()
@@ -329,6 +349,8 @@ server <- function(input, output, session) {
       arrange(desc(Stocks)) %>%
       mutate(prop = portfolio_distribution / sum(df$portfolio_distribution) *100) %>%
       mutate(ypos = cumsum(prop)- 0.5*prop )
+    
+    df <- data.frame(lapply(df, function(y) if(is.numeric(y)) round(y, 2) else y))
     
     piechartly <- plot_ly(df, labels = ~Stocks, values = ~prop, type = 'pie',
                           textposition = 'inside',
@@ -362,8 +384,8 @@ server <- function(input, output, session) {
       counter <- as.numeric(1)
       if (length(positive_stocks > 0)) {
         for (symbol in positive_stocks) {
-          biz_day_seq <- seq(start_date_port(), end_date_port()+h_portafolio(), "days")[isBizday( timeSequence(start_date_port(),end_date_port()+h_portafolio()), holidayNYSE())]
-          #day_seq <- seq(start_date_port(), end_date_port()+h_portafolio(), "days")
+          biz_day_seq <- seq(start_date_port(), end_date_port()+h_Portfolio(), "days")[isBizday( timeSequence(start_date_port(),end_date_port()+h_Portfolio()), holidayNYSE())]
+          #day_seq <- seq(start_date_port(), end_date_port()+h_Portfolio(), "days")
           #NOTE: IF THERE'S AN ERROR REGARDING THE DATES OF THE DATA.FRAMES TRY UNCOMMENTING ABOVE LINE AND COMMENTING THE ONE ABOVE THAT ONE AND CHANGING biz_day_seq TO day_seq BELOW
           all_data <- data[[symbol]][biz_day_seq,6] #selecting only the rows in the given time frame of the training data + prediction horizon
           all_data_df <- data.frame(all_data) #converting all_data into a data.frame
@@ -380,8 +402,8 @@ server <- function(input, output, session) {
           y_actual <- all_data_df$y #storing actual y values into array
           
           #PROPHET
-          prophet_model <- prophet(training_df, yearly.seasonality = input$seasonal, weekly.seasonality = FALSE)
-          future_prophet <- make_future_dataframe(prophet_model, periods = h_portafolio()) #data frame with future dates for forecasting
+          prophet_model <- prophet(training_df, yearly.seasonality = input_seasonal2(), weekly.seasonality = FALSE)
+          future_prophet <- make_future_dataframe(prophet_model, periods = h_Portfolio()) #data frame with future dates for forecasting
           #the following line use the model to forecast and fill in the future dataframe. Future prophet has several columns that contain information about
           #the prediction and the model. The relevant columns for this app are: ds, yhat_lower, yhat_upper, yhat
           forecast_prophet <- predict(prophet_model, future_prophet)
@@ -411,10 +433,10 @@ server <- function(input, output, session) {
           data_length <- as.integer(end_date_port() - start_date_port())/365.25 #data length in years of the training data
           holt_ts <- ts(training_df$y, frequency = as.integer(nrow(training_df)/data_length)) #time series of the training data to use HoltWinters method
           
-          holt_model <-HoltWinters(holt_ts)
+          holt_model <-HoltWinters(holt_ts, gamma = input_seasonal2(), seasonal = input_seasonal_type2())
 
-          forecast_holt <- predict(holt_model, n.ahead = h_portafolio(),  prediction.interval=T,  level=.95)
-          forecast_holt <- data.frame(ds = seq(end_date_port()+1, end_date_port()+h_portafolio(),"days"), 
+          forecast_holt <- predict(holt_model, n.ahead = h_Portfolio(),  prediction.interval=T,  level=.95)
+          forecast_holt <- data.frame(ds = seq(end_date_port()+1, end_date_port()+h_Portfolio(),"days"), 
                                       yhat = as.data.frame(forecast_holt)$fit, 
                                       yhat_lower = as.data.frame(forecast_holt)$lwr,
                                       yhat_upper = as.data.frame(forecast_holt)$upr)
@@ -482,12 +504,19 @@ server <- function(input, output, session) {
         main_holt_df$combined_yhat_lower <- holt_df$yhat_lower*0
         main_holt_df$combined_yhat_upper <- holt_df$yhat_upper*0
         
+        text_symbols <- c()
+        print(typeof(paste("text",symbol,sep="")))
+        print(typeof("text"))
         for (symbol in positive_stocks) {
           
+          #paste("text",symbol,sep="")=symbol
+          
+          text_symbols <- c(text_symbols, paste("text",symbol,sep=""))
+          aes_text = paste("text",symbol,sep="")
           prophet_plot <- prophet_plot + 
             geom_point(aes(y=.data[[paste("y_train",symbol,sep="")]]), size=0.5,alpha=0.8, col=my_colors[color_counter], shape=4) +
-            geom_point(aes(y=.data[[paste("y_test",symbol,sep="")]]), col=my_colors[color_counter], size=0.8, shape =4) +
-            geom_line(aes(y=.data[[paste("yhat",symbol,sep="")]]), size=0.5, alpha=0.5, col="#ed8d3e") + 
+            geom_point(aes(y=.data[[paste("y_test",symbol,sep="")]]), size=0.8,alpha=0.8, col=my_colors[color_counter], shape =4) +
+            geom_line(aes(y=.data[[paste("yhat",symbol,sep="")]]), size=0.5, alpha=0.8, col="#ed8d3e") + 
             geom_ribbon(aes(ymin=.data[[paste("yhat_lower",symbol,sep="")]], ymax=.data[[paste("yhat_upper",symbol,sep="")]]), fill=my_colors[color_counter], alpha=0.25)
           
           holt_plot <- holt_plot + 
@@ -512,19 +541,57 @@ server <- function(input, output, session) {
         }
         
         main_prophet_future <- main_prophet_df[main_prophet_df$ds > end_date_port(),]
-        
-        prophet_plot_combined <- ggplot(main_prophet_future, aes(x=ds)) + 
-          geom_line(data = main_prophet_future, aes(y=combined_yhat), size=0.75, alpha=1, col='blue') +
-          geom_point(data = main_prophet_future, aes(y=combined_y_test), size=0.75,col = 'black') +
-          geom_ribbon(data = main_prophet_future, aes(ymin=combined_yhat_lower, ymax=combined_yhat_upper), fill="#ed8d3e", alpha=0.25) +
-          theme(plot.title = element_text(size = 15),legend.position="bottom")
-          
         main_holt_future <- main_holt_df[main_holt_df$ds > end_date_port(),]
         
-        holt_plot_combined <- ggplot(main_holt_future, aes(x=ds)) + 
-          geom_line(data = main_holt_future, aes(y=combined_yhat), size=0.75, alpha=1, col='blue') + 
-          geom_point(data = main_holt_future, aes(y=combined_y_test), size=0.75,col = 'black') +
-          geom_ribbon(data = main_holt_future, aes(ymin=combined_yhat_lower, ymax=combined_yhat_upper),  col ='#1c5bba',  alpha=0.25) +
+        #Creating dataframes with more readable column names for plotly hover overs
+        # main_prophet_df_readable <- data.frame(lapply(main_prophet_df, function(y) if(is.numeric(y)) round(y, 2) else y))
+        # main_holt_df_readable <- data.frame(lapply(main_holt_df, function(y) if(is.numeric(y)) round(y, 2) else y))
+        main_prophet_future_readable <- data.frame(lapply(main_prophet_future, function(y) if(is.numeric(y)) round(y, 2) else y)) 
+        main_holt_future_readable <- data.frame(lapply(main_holt_future, function(y) if(is.numeric(y)) round(y, 2) else y))
+        
+        # for (symbol in positive_stocks) {
+        #   names(main_prophet_df_readable)[names(main_prophet_df_readable) == paste('y_train',symbol,sep = "")] <- paste('Actual Price ($)',symbol,sep="")
+        #   names(main_prophet_df_readable)[names(main_prophet_df_readable) == paste('y_test',symbol,sep = "")] <- paste('Actual Future Price ($)',symbol,sep="")
+        #   names(main_prophet_df_readable)[names(main_prophet_df_readable) == paste('yhat',symbol,sep = "")] <- paste('Predicted ($)',symbol,sep="")
+        #   names(main_prophet_df_readable)[names(main_prophet_df_readable) == paste('yhat_lower',symbol,sep = "")] <- paste('Lower Bound ',symbol,sep="")
+        #   names(main_prophet_df_readable)[names(main_prophet_df_readable) == paste('yhat_upper',symbol,sep = "")] <- paste('Upper Bound ',symbol,sep="")
+        #   
+        #   names(main_holt_df_readable)[names(main_holt_df_readable) == paste('y_train',symbol,sep = "")] <- paste('Actual Price ($)',symbol,sep="")
+        #   names(main_holt_df_readable)[names(main_holt_df_readable) == paste('y_test',symbol,sep = "")] <- paste('Actual Future Price ($)',symbol,sep="")
+        #   names(main_holt_df_readable)[names(main_holt_df_readable) == paste('yhat',symbol,sep = "")] <- paste('Predicted ($)',symbol,sep="")
+        #   names(main_holt_df_readable)[names(main_holt_df_readable) == paste('yhat_lower',symbol,sep = "")] <- paste('Lower Bound ',symbol,sep="")
+        #   names(main_holt_df_readable)[names(main_holt_df_readable) == paste('yhat_upper',symbol,sep = "")] <- paste('Upper Bound ',symbol,sep="")
+        # }
+        # 
+        names(main_prophet_future_readable)[names(main_prophet_future_readable) == 'combined_y_test'] <- 'Portfolio Actual Future Price ($)'
+        names(main_prophet_future_readable)[names(main_prophet_future_readable) == 'combined_yhat'] <- 'Portfolio Predicted ($)'
+        names(main_prophet_future_readable)[names(main_prophet_future_readable) == 'combined_yhat_lower'] <- 'Portfolio Predicted Lower Bound'
+        names(main_prophet_future_readable)[names(main_prophet_future_readable) == 'combined_yhat_upper'] <- 'Portfolio Predicted Upper Bound'
+        
+        names(main_holt_future_readable)[names(main_holt_future_readable) == 'combined_y_test'] <- 'Portfolio Actual Future Price ($)'
+        names(main_holt_future_readable)[names(main_holt_future_readable) == 'combined_yhat'] <- 'Portfolio Predicted ($)'
+        names(main_holt_future_readable)[names(main_holt_future_readable) == 'combined_yhat_lower'] <- 'Portfolio Predicted Lower Bound'
+        names(main_holt_future_readable)[names(main_holt_future_readable) == 'combined_yhat_upper'] <- 'Portfolio Predicted Upper Bound'
+        
+        names(main_prophet_future_readable)[names(main_prophet_future_readable) == 'ds'] <- 'Date'
+        names(main_holt_future_readable)[names(main_holt_future_readable) == 'ds'] <- 'Date'
+        # names(main_prophet_df_readable)[names(main_prophet_df_readable) == 'ds'] <- 'Date'
+        # names(main_holt_df_readable)[names(main_holt_df_readable) == 'ds'] <- 'Date'
+        
+        main_prophet_future_readable %>% mutate_if(is.numeric, round, digits=2)
+      
+        print(head(main_prophet_future_readable))
+        prophet_plot_combined <- ggplot(main_prophet_future_readable, aes(x=`Date`)) + 
+          geom_line(data = main_prophet_future_readable, aes(y=`Portfolio Predicted ($)`), size=0.75, alpha=1, col='blue') +
+          geom_point(data = main_prophet_future_readable, aes(y=`Portfolio Actual Future Price ($)`), size=0.75,col = 'black') +
+          geom_ribbon(data = main_prophet_future_readable, aes(ymin=`Portfolio Predicted Lower Bound`, ymax=`Portfolio Predicted Upper Bound`), fill="#ed8d3e", alpha=0.25) +
+          theme(plot.title = element_text(size = 15),legend.position="bottom")
+          
+        
+        holt_plot_combined <- ggplot(main_holt_future_readable, aes(x=`Date`)) + 
+          geom_line(data = main_holt_future_readable, aes(y=`Portfolio Predicted ($)`), size=0.75, alpha=1, col='blue') + 
+          geom_point(data = main_holt_future_readable, aes(y=`Portfolio Actual Future Price ($)`), size=0.75,col = 'black') +
+          geom_ribbon(data = main_holt_future_readable, aes(ymin=`Portfolio Predicted Lower Bound`, ymax=`Portfolio Predicted Upper Bound`),  col ='#1c5bba',  alpha=0.25) +
           theme(plot.title = element_text(size = 15),legend.position="bottom")
         
         prophet_plotly_combined <- ggplotly(prophet_plot_combined) %>% layout(
@@ -558,7 +625,7 @@ server <- function(input, output, session) {
         prophet_plot <- prophet_plot + 
           geom_vline(aes(xintercept=as.numeric(as.Date(end_date_port()+1))), cex=0.3, col="steelblue4", linetype = "dashed")
         
-        prophet_plotly <- ggplotly(prophet_plot) %>% layout(
+        prophet_plotly <- ggplotly(prophet_plot)%>% layout(
           xaxis = list(
             title = "Date",
             tickfont = list(size=12)
@@ -590,7 +657,14 @@ server <- function(input, output, session) {
         )
          
         subplot(prophet_plotly_combined, holt_plotly_combined, prophet_plotly, holt_plotly, nrows = 2, margin=0.08, titleX = TRUE, titleY=TRUE, shareY=F) %>% layout(
-          title = symbol,
+          title = list(
+            text = "Forecasted Porfolio",
+            font = list(size=24),
+            x = 0.5,
+            xanchor = 'center',
+            yanchor = 'top'
+          ),
+          margin = 0.5,
           annotations = list(
             list(
               x = 0.225, 
