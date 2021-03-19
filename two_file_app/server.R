@@ -51,6 +51,13 @@ server <- function(input, output, session) {
     return(input$seasonal_type)
   })
   
+  observe({
+    # use tabsetPanel 'id' argument to change tabs
+    if (input$runAnalysisButton > 0) {
+      updateTabsetPanel(session, "analysis-inner-tabset", selected = "visualization-panel")
+    } 
+  })
+  
   output$plots <- renderUI({
     plot_output_list <- lapply(1:length(selected_stocks_ana()), function(i) {
       plotname <- paste("plot", i, sep="")
@@ -168,11 +175,6 @@ server <- function(input, output, session) {
       
         prophet_df_readable <- data.frame(prophet_df)
         colnames(prophet_df_readable) <- c("Date","Lower Bound y", "Upper Bound y", "yhat", "y", "Actual Price ($)", "Actual Future Price ($)", "Predicted ($)", "Fitted ($)","Lower Bound", "Upper Bound")
-        print(tail(prophet_df_readable))
-        print(tail(prophet_df))
-        print('separation')
-        print(colnames(prophet_df))
-        print(colnames(holt_df))
         prophet_ana_plot <- ggplot(prophet_df_readable, aes(x=`Date`)) +
           geom_line(aes(y=`Actual Price ($)`), col="#c269f5", size=0.5, alpha=0.7) +
           geom_line(aes(y=`Actual Future Price ($)`), col="#8e69f5", size=0.5, alpha=0.7) +

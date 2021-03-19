@@ -97,18 +97,18 @@ ui <- fluidPage(
         tabsetPanel(
           id = 'analysis-inner-tabset',
           tabPanel(
-            id = 'data-panel',
+            value = 'data-panel',
             title = 'Data',
             tableOutput('table1'),
             icon = icon("table")
           ),
           tabPanel(
-            id = 'visualization-panel',
+            value = 'visualization-panel',
             title = 'Visualization',
             br(),
             p("Each pair of graphs for each of the selected stocks, shows the historical data over the stock for the selected training period as well as a
               fitted model to the data. On the Prophet graph (on the left of each pair), the fitted model to the training data is shown in yellow. This model 
-              extends to the prrediction zone (to the right of the dashed vertical line within the same graph) where it turns orange, which is simply the result 
+              extends to the prediction zone (to the right of the dashed vertical line within the same graph) where it turns orange, which is simply the result 
               of 'continuing' the line for the prediction horizon. This line (the yellow-orange line) is what we call the model. On the Holt graphs (right side
               of the pairs), the model is shown in two shades of blue (the lighter shade for the fitted model to the training data, and the darker blue for the 
               predicted values)", 
@@ -211,8 +211,8 @@ ui <- fluidPage(
                      br(),
                      p("The aim of this application is for you to be able to explore the stock market in an interactive way that will 
                        hopefully allow you to better understand your investing options. Simply talking about the stock market, let alone investing in it, 
-                       might seem mind-boggling. This application, at first, with a bunch of graphs and numbers, might seem mind boggling as well.
-                       However, upon a little bit of inspection, through which I will guide you, you will be able to make better-informed financial desions. ", 
+                       might seem mind-boggling. This application, at first, with a bunch of graphs and numbers, could be a little scary as well. However, 
+                       upon a little bit of inspection, through which I will guide you, you will be able to make better-informed financial desions. ", 
                        style="text-align:justify;color:black;background-color:lavender;padding:15px;border-radius:10px"),
                      p("The aim of this application is", strong("NOT"), "to persuade you to invest in the stock market. The only purpose
                        of this application is to expand your horizon of financial options. You might, upon learning more about the stock market through the app,
