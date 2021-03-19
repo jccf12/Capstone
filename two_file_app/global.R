@@ -31,7 +31,8 @@ my_colors <- brewer.pal(n = 12, name = "Paired")
 algorithm_names <- c("Holt's Exponential Smoothing","Prophet Time Series Model")
 risk_levels <- c('Manual Risk Portfolio', 'Low Risk Portfolio', 'Medium Risk Portfolio', 'High Risk Portfolio')
 seasonality_types <- c('additive','multiplicative')
-symbols <- scan("data/top50_market_cap_usa.txt", what = 'character')
+symbols <- scan("data/top50_market_cap_usa_names.txt", what = 'character', sep = "\n")
+symbols1 <- scan("data/top50_market_cap_usa.txt", what = 'character')
 
 syms_lo_risk <- c()
 syms_me_risk <- c()
@@ -40,18 +41,20 @@ syms_hi_risk <- c()
 data <- hash()
 my_string <- read_file("data/example.txt")
 
-for (symbol in symbols) {
-  data[symbol] <- getSymbols(symbol, src = "yahoo", auto.assign = FALSE)
-  std <- sd(yearlyReturn(data[[symbol]]))
+i <- 1
+for (symbol in symbols1) {
+  data[symbols[i]] <- getSymbols(symbol, src = "yahoo", auto.assign = FALSE)
+  std <- sd(yearlyReturn(data[[symbols[i]]]))
   if (!is.na(std)) {
     if ( std < 0.25 ) {
-      syms_lo_risk <- append(syms_lo_risk, symbol)
+      syms_lo_risk <- append(syms_lo_risk, symbols[i])
     } 
     else if (std >= 0.25 && 0.45 > std) {
-      syms_me_risk <- append(syms_me_risk, symbol)
+      syms_me_risk <- append(syms_me_risk, symbols[i])
     }
     else if (std >= 0.45) {
-      syms_hi_risk <- append(syms_hi_risk, symbol)
+      syms_hi_risk <- append(syms_hi_risk, symbols[i])
     }
   }
+  i <- i+1
 }

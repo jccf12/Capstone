@@ -507,8 +507,6 @@ server <- function(input, output, session) {
         main_holt_df$combined_yhat_upper <- holt_df$yhat_upper*0
         
         text_symbols <- c()
-        print(typeof(paste("text",symbol,sep="")))
-        print(typeof("text"))
         for (symbol in positive_stocks) {
           
           #paste("text",symbol,sep="")=symbol
@@ -582,7 +580,6 @@ server <- function(input, output, session) {
         
         main_prophet_future_readable %>% mutate_if(is.numeric, round, digits=2)
       
-        print(head(main_prophet_future_readable))
         prophet_plot_combined <- ggplot(main_prophet_future_readable, aes(x=`Date`)) + 
           geom_line(data = main_prophet_future_readable, aes(y=`Portfolio Predicted ($)`), size=0.75, alpha=1, col='blue') +
           geom_point(data = main_prophet_future_readable, aes(y=`Portfolio Actual Future Price ($)`), size=0.75,col = 'black') +
@@ -657,10 +654,17 @@ server <- function(input, output, session) {
             size = 12
           )
         )
-         
-        subplot(prophet_plotly_combined, holt_plotly_combined, prophet_plotly, holt_plotly, nrows = 2, margin=0.08, titleX = TRUE, titleY=TRUE, shareY=F) %>% layout(
+        
+        profit <- round(tail(main_prophet_future$combined_y_test,1), digits = 2) - input_init_capital()
+        if (profit >= 0) {
+          text_in_title = paste0("Nice! You made $", profit," with this virtual portfolio over the course of ",h_Portfolio()," days.\n\n")
+        } else {
+          text_in_title = paste0("Oh no! You would have lost $", -profit, " with this virtual portfolio over the course of ",h_Portfolio()," days.\n\n")
+        }
+        
+        subplot(prophet_plotly_combined, holt_plotly_combined,  prophet_plotly, holt_plotly, nrows = 2, margin=0.08, titleX = TRUE, titleY=TRUE, shareY=F) %>% layout(
           title = list(
-            text = "Forecasted Porfolio",
+            text = text_in_title,
             font = list(size=24),
             x = 0.5,
             xanchor = 'center',
@@ -668,6 +672,18 @@ server <- function(input, output, session) {
           ),
           margin = 0.5,
           annotations = list(
+            list(
+              x = 0.5,
+              y = 1.2,
+              font = list(size=20),
+              text = 'Congratulations you made a lot of money!!!!!!!!!!! hahahahahahahahahahahahahaha',
+              xref = 'paper',
+              yref = 'paper',
+              xanchor = 'center',
+              yanchor = 'center',
+              showarrow = FALSE
+            ),
+            
             list(
               x = 0.225, 
               y = 1.0, 
@@ -717,6 +733,6 @@ server <- function(input, output, session) {
         
       } # end 2nd if statement
     }# <- end 1st if statment
-  })
+  }) # <- end output Plotly
   
 }
