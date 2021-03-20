@@ -382,7 +382,7 @@ ui <- fluidPage(
               depending on the selected input. The image below was also taken from Facebook's Prophet blog on the same data as the image above."),
             tags$img(src="yearly_prophet.png", width ="100%"),
             h2("Holidays"),
-            p("Prophet's model allows for the user to provide sepcific dates for holidays that might affect price changes on these specific dates. For simplicity,
+            p("Prophet's model allows for the user to provide specific dates for holidays that might affect price changes on these specific dates. For simplicity,
               this component was not included in the model that makes the forecasts on this website. The main reason being that the holiday dates will vary as the
               user chooses different training periods."),
             br(),
