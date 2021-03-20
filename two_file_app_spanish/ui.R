@@ -52,8 +52,8 @@ ui <- fluidPage(
           column(
             div(
               h4("Acerca de"),
-              p("On this page you can find more information about what happens 'under the hood' to generate the interactive graphs on the Analysis and Portfolio tabs."),
               p("En esta página podrás encontrar más información sobre lo que sucede 'bajo el capó' para generar los gráficos interactivos en las pestañas de Análisis y Portafolio."),
+              p("Si tienes tiempo, te sugiero que consultes esta página antes de visitar las pestañas de análisis de datos y simulación de portafolios."),
               style="color:black;background-color:lavender;padding:15px;border-radius:10px"
             ),
             width = 4,
