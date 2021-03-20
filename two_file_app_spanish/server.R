@@ -467,11 +467,11 @@ server <- function(input, output, session) {
           main_prophet_df[[paste("Límite Inferior ($) ",symbol,sep="")]] <- round(prophet_df$yhat_lower*multiplier,2)
           main_prophet_df[[paste("Límite Superior ($) ",symbol,sep="")]] <- round(prophet_df$yhat_upper*multiplier,2)
           
-          main_holt_df[[paste("y_train",symbol,sep="")]] <- round(holt_df$y_train*multiplier,2)
-          main_holt_df[[paste("y_test",symbol,sep="")]] <- round(holt_df$y_test*multiplier,2)
-          main_holt_df[[paste("yhat",symbol,sep="")]] <- round(holt_df$yhat*multiplier,2)
-          main_holt_df[[paste("yhat_lower",symbol,sep="")]] <- round(holt_df$yhat_lower*multiplier,2)
-          main_holt_df[[paste("yhat_upper",symbol,sep="")]] <- round(holt_df$yhat_upper*multiplier,2)
+          main_holt_df[[paste("Precio Real ($) ",symbol,sep="")]] <- round(holt_df$y_train*multiplier,2)
+          main_holt_df[[paste("Precio Futuro Real ($) ",symbol,sep="")]] <- round(holt_df$y_test*multiplier,2)
+          main_holt_df[[paste("Precio Pronosticado ($) ",symbol,sep="")]] <- round(holt_df$yhat*multiplier,2)
+          main_holt_df[[paste("Límite Inferior ($) ",symbol,sep="")]] <- round(holt_df$yhat_lower*multiplier,2)
+          main_holt_df[[paste("Límite Superior ($) ",symbol,sep="")]] <- round(holt_df$yhat_upper*multiplier,2)
   
           counter <- counter+1
         } # <- end for loop statement
@@ -511,10 +511,10 @@ server <- function(input, output, session) {
             geom_ribbon(aes(ymin=.data[[paste("Límite Inferior ($) ",symbol,sep="")]], ymax=.data[[paste("Límite Superior ($) ",symbol,sep="")]]), fill=my_colors[color_counter], alpha=0.25)
           
           holt_plot <- holt_plot + 
-            geom_point(aes(y=.data[[paste("y_train",symbol,sep="")]]), size=0.5,alpha=0.8, col=my_colors[color_counter], shape =4) +
-            geom_point(aes(y=.data[[paste("y_test",symbol,sep="")]]), size=0.5,alpha=0.8, col=my_colors[color_counter], shape =4) +
-            geom_line(aes(y=.data[[paste("yhat", symbol,sep="")]]),size=0.5, alpha=0.8, col="#1c5bba")+ 
-            geom_ribbon(aes(ymin=.data[[paste("yhat_lower",symbol,sep="")]], ymax=.data[[paste("yhat_upper",symbol,sep="")]]),  fill=my_colors[color_counter],  alpha=0.25)
+            geom_point(aes(y=.data[[paste("Precio Real ($) ",symbol,sep="")]]), size=0.5,alpha=0.8, col=my_colors[color_counter], shape =4) +
+            geom_point(aes(y=.data[[paste("Precio Futuro Real ($) ",symbol,sep="")]]), size=0.5,alpha=0.8, col=my_colors[color_counter], shape =4) +
+            geom_line(aes(y=.data[[paste("Precio Pronosticado ($) ", symbol,sep="")]]),size=0.5, alpha=0.8, col="#1c5bba")+ 
+            geom_ribbon(aes(ymin=.data[[paste("Límite Inferior ($) ",symbol,sep="")]], ymax=.data[[paste("Límite Superior ($) ",symbol,sep="")]]),  fill=my_colors[color_counter],  alpha=0.25)
           
           color_counter <- color_counter+1
       
@@ -524,11 +524,11 @@ server <- function(input, output, session) {
           main_prophet_df$combined_yhat_lower <- main_prophet_df$combined_yhat_lower + main_prophet_df[[paste("Límite Inferior ($) ",symbol,sep="")]]
           main_prophet_df$combined_yhat_upper <- main_prophet_df$combined_yhat_upper + main_prophet_df[[paste("Límite Superior ($) ",symbol,sep="")]]
           
-          main_holt_df$combined_y_train <- main_holt_df$combined_y_train + main_holt_df[[paste("y_train",symbol,sep="")]]
-          main_holt_df$combined_y_test <- main_holt_df$combined_y_test + main_holt_df[[paste("y_test",symbol,sep="")]]
-          main_holt_df$combined_yhat <- main_holt_df$combined_yhat + main_holt_df[[paste("yhat",symbol,sep="")]]
-          main_holt_df$combined_yhat_lower <- main_holt_df$combined_yhat_lower + main_holt_df[[paste("yhat_lower",symbol,sep="")]]
-          main_holt_df$combined_yhat_upper <- main_holt_df$combined_yhat_upper + main_holt_df[[paste("yhat_upper",symbol,sep="")]]
+          main_holt_df$combined_y_train <- main_holt_df$combined_y_train + main_holt_df[[paste("Precio Real ($) ",symbol,sep="")]]
+          main_holt_df$combined_y_test <- main_holt_df$combined_y_test + main_holt_df[[paste("Precio Futuro Real ($) ",symbol,sep="")]]
+          main_holt_df$combined_yhat <- main_holt_df$combined_yhat + main_holt_df[[paste("Precio Pronosticado ($) ",symbol,sep="")]]
+          main_holt_df$combined_yhat_lower <- main_holt_df$combined_yhat_lower + main_holt_df[[paste("Límite Inferior ($) ",symbol,sep="")]]
+          main_holt_df$combined_yhat_upper <- main_holt_df$combined_yhat_upper + main_holt_df[[paste("Límite Superior ($) ",symbol,sep="")]]
         }
         
         main_prophet_future <- main_prophet_df[main_prophet_df$ds > end_date_port(),]

@@ -5,8 +5,8 @@ account: jccf12
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3824085
-bundleId: 4371332
+bundleId: 4371749
 url: https://jccf12.shinyapps.io/Juan_Capstone_Spanish/
-when: 1616216730.32258
+when: 1616226168.99808
 asMultiple: FALSE
 asStatic: FALSE
