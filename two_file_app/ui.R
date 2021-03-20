@@ -29,7 +29,7 @@ ui <- fluidPage(
             div(
               h4("Analysis"),
               p("In this tab, you will be able to explore up to 50 of the biggest companies in Mexico and United States."),
-              p("You can look at the value of each their shares (which refer to a small fraction of the company) and how it was evolved through time."),
+              p("You can look at the value of each of their shares (which refer to a small fraction of the company) and how it was evolved through time."),
               p("You will also be able to test two popular tools that have been used to make predictions of these share prices and compare them."),
               style="color:black;background-color:lavender;padding:15px;border-radius:10px"
             ),
@@ -39,11 +39,11 @@ ui <- fluidPage(
           column(
             div(
               h4("Portfolio"),
-              p("Here you will have an opportunity to create your own virtual portfolio ! A hypothetical one, of course, which means that you won't need to 
+              p("Here you will have an opportunity to create your own virtual portfolio! A hypothetical one, of course, which means that you won't need to 
               actually invest any money."),
-              p("You will be able to go 'back in time' and see what would have happened if you had invested on some of these 50 companies. Would you have made money?
+              p("You will be able to go 'back in time' and see what would have happened if you had invested in some of these 50 companies. Would you have made money?
               Would you have become rich? Or maybe you lost it all... Let's find out!"),
-              p("You can also use the tools that you explored in the Analysis tab to make predictions into the future! You can create whichever hypothetical porfolio
+              p("You can also use the tools that you explored in the Analysis tab to make predictions for the future! You can create whichever hypothetical portfolio
               you like."),
               style="color:black;background-color:lavender;padding:15px;border-radius:10px"
             ),
@@ -114,7 +114,7 @@ ui <- fluidPage(
               of the pairs), the model is shown in two shades of blue (the lighter shade for the fitted model to the training data, and the darker blue for the 
               predicted values)", 
               style = "font-size:1.1em;line-height: 1.8"),
-            div(tags$ul("Thing to focus on:",
+            div(tags$ul("Things to focus on:",
                         tags$li("How has the price evolved for each of the selected stocks? Does it seem to go up and down a lot? Does it have any sharp increase
                                 or decrease?"),
                         tags$li("How well does each the models predict what actually happened? Do predictions agree about the portfolio going up or down? 
@@ -164,7 +164,7 @@ ui <- fluidPage(
                  what this means, don't worry! Just leave the pre-selected values. If you want to learn more about them, just visit the About tab!"),
         checkboxInput("seasonal2","Use yearly seasonal factor (both Prophet and Holt Winters)", TRUE),
         selectInput('seasonal_type2', 'Type of seasonal model used for the Holt Winters algorithm', seasonality_types),
-        actionButton('runPortfolio', 'Run Portfolio'),
+        actionButton('runPortfolio', 'Run Portafolio'),
         width = 3
         ),
       mainPanel(
@@ -174,14 +174,14 @@ ui <- fluidPage(
         helpText("Hover over the slices on the pie chart above to see the exact percentage of your portfolio assigned to each of the individual stocks", style="text-align:center"),
         br(),
         p("The top two graphs below show the evolution of your portfolio over the prediction horizon. This means that whatever the amount that you chose to start with 
-          (Initial Investment Amount ($USD)), if you were to invest it on the selected stocks and selected portions of that amount (shown on the pie chart), would change
+          (Initial Investment Amount ($USD)), if you had invested it in the selected stocks and selected portions of that amount (shown on the pie chart), it would have evolved
           as shown by the black dots on the top two graphs below. Each of those graphs, also shows you what each of the models would tell you it would happen.", style = "font-size:1.1em;line-height: 1.8"),
         div(tags$ul("There are three things you should focus on what is shown in the figure below:",
            tags$li("The actual evolution of the selected porfolio shown in black in either of the top two graphs. This shows what would have",
                    strong("actually"),"happened if someone had invested the amount of money selected based on the porfolio distribution shown in the pie chart"),
-           tags$li("How well each of the models predicted what actually happened. Did the prediction agree about the portfolio going up or down? Is the actual value 
+           tags$li("How well did each of the models predict what actually happened? Did the prediction agree about the portfolio going up or down? Is the actual value 
                    of the porfolio within the the margins of error of the model predictions?"),
-           tags$li("On the two graphs below, is there any specific stock that seemed to be reponsible for the increase or decrease of the porfolio?")
+           tags$li("On the two graphs below, is there any specific stock that seemed to be responsible for the increase or decrease of the portfolio?")
            ),
           style="text-align:justify;color:white;background-color:#02A4D3;padding:20px;border-radius:7px;font-size:1.2em;line-height: 1.8"),
         br(),
@@ -189,7 +189,7 @@ ui <- fluidPage(
         br(),
         helpText("Hover over the graphs on the figure above to get more information about what each line shows and the exact value at a given time", style="text-align:center"),
         p("You can try modifying your input to see what would have happened if you had assigned more (or less) of the initial amount to a given stock.
-           Maybe add or remove stocks to see how this would change. You can also change the training data or choose a different time period.", style="text-align:justify;color:white;background-color:#02A4D3;padding:20px;border-radius:7px;font-size:1.2em;line-height: 1.8"),
+           Maybe add or remove stocks to see how this would change. You can also change the training data or choose a different prediction horizon.", style="text-align:justify;color:white;background-color:#02A4D3;padding:20px;border-radius:7px;font-size:1.2em;line-height: 1.8"),
         width = 9
       ) # <- end mainPanel 'inner-main-portfolio
     ), # <-- end tabPanel 'protfolio-tab'
@@ -213,7 +213,7 @@ ui <- fluidPage(
                      p("The aim of this application is for you to be able to explore the stock market in an interactive way that will 
                        hopefully allow you to better understand your investing options. Simply talking about the stock market, let alone investing in it, 
                        might seem mind-boggling. This application, at first, with a bunch of graphs and numbers, could be a little scary as well. However, 
-                       upon a little bit of inspection, through which I will guide you, you will be able to make better-informed financial desions. ", 
+                       upon a little bit of inspection, through which I will guide you, you will be able to make better-informed financial decisions. ", 
                        style="text-align:justify;color:black;background-color:lavender;padding:15px;border-radius:10px"),
                      p("The aim of this application is", strong("NOT"), "to persuade you to invest in the stock market. The only purpose
                        of this application is to expand your horizon of financial options. You might, upon learning more about the stock market through the app,
@@ -284,7 +284,7 @@ ui <- fluidPage(
                 of the training period (marked by the horizontal dashed line). The shaded region around the orange section refers to the margin of error of 
                 the predictions. In purple, we have the actual Share Price of the stocks. To the left of the vertical dashed line, we can see how the actual data
                 and the model are very close together. This is because the model", em("uses"), "the historical data to draw the yellow line. To the right, we can
-                compare the predictions agains the real data to see how good were the predictions made by the model."),
+                compare the predictions against the real data to see how good were the predictions made by the model."),
               p("Everything said about the Prophet graph (left), applies to the Holt graph (right). In the case of Holt, the model and predictions are shown in
                 shades of blue. The main difference between the two is that the method used to build each of the models is different. For details on how these
                 models make predictions refer to the corresponding tabs."),
@@ -382,7 +382,7 @@ ui <- fluidPage(
               depending on the selected input. The image below was also taken from Facebook's Prophet blog on the same data as the image above."),
             tags$img(src="yearly_prophet.png", width ="100%"),
             h2("Holidays"),
-            p("Prophet's model allows for the user to provide sepcific dates for holidays that might affect price changes on these speciifc dates. For simplicity,
+            p("Prophet's model allows for the user to provide sepcific dates for holidays that might affect price changes on these specific dates. For simplicity,
               this component was not included in the model that makes the forecasts on this website. The main reason being that the holiday dates will vary as the
               user chooses different training periods."),
             br(),

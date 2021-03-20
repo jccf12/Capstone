@@ -1,0 +1,42 @@
+Apple
+Microsoft
+Amazon
+Google
+Facebook
+Alibaba Group
+Tencent
+Tesla
+Berkshire Hathaway
+Team SoloMid
+Visa
+Walmart
+JPMorgan Chase
+Johnson & Johnson
+Procter & Gamble
+Mastercard
+UnitedHealth Group
+Nvidia
+Roche Holding AG
+Bank of America
+The Home Depot
+The Walt Disney Company
+Verizon Communications
+PayPal
+Pfizer
+Adobe
+Comcast
+The Coca-Cola Company
+Netflix
+AT&T
+Nike
+Merck & Co.
+Novartis
+Intel
+Salesforce
+PepsiCo
+ASML Holding
+AbbVie Inc.
+Abbott Laboratories
+Cisco Systems
+Thermo Fisher Scientific
+ExxonMobil
