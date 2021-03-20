@@ -23,24 +23,22 @@ library(shinythemes)
 ?HoltWinters
 ?prophet
 
-max_plots <- 20
-#my_colors <- c("cornsilk3",'coral1','chocolate1','chartreuse4','chartreuse','cadetblue4','cadetblue','brown4',
-               #'blueviolet','dodgerblue4','dodgerblue1','dimgray','deepskyblue1','deeppink4','deeppink','darkviolet',
-               #'darkturquoise','darkslateblue','darkseagreen3','darkorchid','orange1','tomato1','olivedrab4','red4','red1','tan')
-my_colors <- brewer.pal(n = 12, name = "Paired")
+max_plots <- 20 #max plots to display
+my_colors <- brewer.pal(n = 12, name = "Paired") #colors for single stocks that compose the porfolio
+
 algorithm_names <- c("Holt's Exponential Smoothing","Prophet Time Series Model")
 risk_levels <- c('Manual Risk Portfolio', 'Low Risk Portfolio', 'Medium Risk Portfolio', 'High Risk Portfolio')
 seasonality_types <- c('additive','multiplicative')
-symbols <- scan("data/top50_market_cap_usa_names.txt", what = 'character', sep = "\n")
-symbols1 <- scan("data/top50_market_cap_usa.txt", what = 'character')
+symbols <- scan("data/top50_market_cap_usa_names.txt", what = 'character', sep = "\n") #company symbols
+symbols1 <- scan("data/top50_market_cap_usa.txt", what = 'character') #company names
 
 syms_lo_risk <- c()
 syms_me_risk <- c()
 syms_hi_risk <- c()
 
-data <- hash()
-my_string <- read_file("data/example.txt")
+data <- hash() #data dictionary that will contain all the retireved data from the Yahoo API
 
+#retrieving Yahoo data
 i <- 1
 for (symbol in symbols1) {
   data[symbols[i]] <- getSymbols(symbol, src = "yahoo", auto.assign = FALSE)
