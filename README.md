@@ -25,7 +25,27 @@ If you wish to reproduce the application, you can download either the folder [tw
 You can install the necessary packages from CRAN as follows:
 
 ```r
-install.packages("bookdown")
+install.packages("shiny")
+install.packages("quantmod")
+install.packages("xts")
+install.packages("forecast")
+install.packages("callr")
+install.packages("pkgbuild")
+install.packages("hash")
+install.packages("grid")
+install.packages("gridExtra")
+install.packages("ggplot2")
+install.packages("data.table")
+install.packages("prophet")
+install.packages("dplyr")
+install.packages("shinycssloaders")
+install.packages("timeDate")
+install.packages("plotly")
+install.packages("gridExtra")
+install.packages("ggthemes")
+install.packages("RColorBrewer")
+install.packages("readr")
+install.packages("shinythemes")
 ```
 
 ## Usage
