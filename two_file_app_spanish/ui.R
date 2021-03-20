@@ -6,6 +6,7 @@ ui <- fluidPage(
     tabPanel(
       id = 'landing-tab',
       title = 'Inicio',
+      fluidRow(
       div(
         column(width=2),
         column(
@@ -63,6 +64,14 @@ ui <- fluidPage(
         )
         
         )
+    ), #<-end fluidRow
+      fluidRow(br(),br()),
+      fluidRow(
+        div(
+          HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/F4YSGjXjZfY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
+          style="text-align:center;margin-top:100px:margin-bottom:20px;height:400px"
+        )
+      )
     ),
     
     #ANALYSIS TAB

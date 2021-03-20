@@ -6,64 +6,73 @@ ui <- fluidPage(
     tabPanel(
       id = 'landing-tab',
       title = 'Home',
-      div(
-        column(width=2),
-        column(
-          h1('Welcome!',
-             style = "text-align:center;"),
-          div(
-              h4("Are you interested in exploring investing opportunities in the stock market?
-                  Do you already know about the stock market but you would like to see if it is predictable?
-                  Do you just want to learn more about the stock market or prediction algoritghms?",
-                style="text-align:justify;line-height:1.6"),
-              h4(strong("Then, this is the right place for you!"),
-                style="text-align:center;line-height:1.6"),
-             style="color:white;background-color:#02A4D3;padding:15px;border-radius:10px"),
-          br(),
-          "It is possible that you have been curious about investing in the stock market, but you never really knew how it works. 
-          Maybe you do have an idea how it works but you don't know if it's for you. Or maybe you are already an expert on it, and are excited
-          about predicting the stock market, and you want to know what tools are out there that can help you with it. Whatever is the case for you, I hope that this site 
-          will be somehow useful for you.",
-          h2("What you will find here"),
+      fluidRow(
+        div(
+          column(width=2),
           column(
+            h1('Welcome!',
+               style = "text-align:center;"),
             div(
-              h4("Analysis"),
-              p("In this tab, you will be able to explore up to 50 of the biggest companies in Mexico and United States."),
-              p("You can look at the value of each of their shares (which refer to a small fraction of the company) and how it was evolved through time."),
-              p("You will also be able to test two popular tools that have been used to make predictions of these share prices and compare them."),
-              style="color:black;background-color:lavender;padding:15px;border-radius:10px"
+                h4("Are you interested in exploring investing opportunities in the stock market?
+                    Do you already know about the stock market but you would like to see if it is predictable?
+                    Do you just want to learn more about the stock market or prediction algoritghms?",
+                  style="text-align:justify;line-height:1.6"),
+                h4(strong("Then, this is the right place for you!"),
+                  style="text-align:center;line-height:1.6"),
+               style="color:white;background-color:#02A4D3;padding:15px;border-radius:10px"),
+            br(),
+            "It is possible that you have been curious about investing in the stock market, but you never really knew how it works. 
+            Maybe you do have an idea how it works but you don't know if it's for you. Or maybe you are already an expert on it, and are excited
+            about predicting the stock market, and you want to know what tools are out there that can help you with it. Whatever is the case for you, I hope that this site 
+            will be somehow useful for you.",
+            h2("What you will find here"),
+            column(
+              div(
+                h4("Analysis"),
+                p("In this tab, you will be able to explore up to 50 of the biggest companies in Mexico and United States."),
+                p("You can look at the value of each of their shares (which refer to a small fraction of the company) and how it was evolved through time."),
+                p("You will also be able to test two popular tools that have been used to make predictions of these share prices and compare them."),
+                style="color:black;background-color:lavender;padding:15px;border-radius:10px"
+              ),
+              width = 4,
+              style="padding:15px;border-radius:10px"
             ),
-            width = 4,
-            style="padding:15px;border-radius:10px"
-          ),
-          column(
-            div(
-              h4("Portfolio"),
-              p("Here you will have an opportunity to create your own virtual portfolio! A hypothetical one, of course, which means that you won't need to 
-              actually invest any money."),
-              p("You will be able to go 'back in time' and see what would have happened if you had invested in some of these 50 companies. Would you have made money?
-              Would you have become rich? Or maybe you lost it all... Let's find out!"),
-              p("You can also use the tools that you explored in the Analysis tab to make predictions for the future! You can create whichever hypothetical portfolio
-              you like."),
-              style="color:black;background-color:lavender;padding:15px;border-radius:10px"
+            column(
+              div(
+                h4("Portfolio"),
+                p("Here you will have an opportunity to create your own virtual portfolio! A hypothetical one, of course, which means that you won't need to 
+                actually invest any money."),
+                p("You will be able to go 'back in time' and see what would have happened if you had invested in some of these 50 companies. Would you have made money?
+                Would you have become rich? Or maybe you lost it all... Let's find out!"),
+                p("You can also use the tools that you explored in the Analysis tab to make predictions for the future! You can create whichever hypothetical portfolio
+                you like."),
+                style="color:black;background-color:lavender;padding:15px;border-radius:10px"
+              ),
+              style="padding:15px;border-radius:10px",
+              width = 4
             ),
-            style="padding:15px;border-radius:10px",
-            width = 4
-          ),
-          column(
-            div(
-              h4("About"),
-              p("On this page you can find more information about what happens 'under the hood' to generate the interactive graphs on the Analysis and Portfolio tabs."),
-              p("If you have time, I would suggest checking out this page before you dive into looking at the data and simulating portfolios."),
-              style="color:black;background-color:lavender;padding:15px;border-radius:10px"
+            column(
+              div(
+                h4("About"),
+                p("On this page you can find more information about what happens 'under the hood' to generate the interactive graphs on the Analysis and Portfolio tabs."),
+                p("If you have time, I would suggest checking out this page before you dive into looking at the data and simulating portfolios."),
+                style="color:black;background-color:lavender;padding:15px;border-radius:10px"
+              ),
+              width = 4,
+              style="padding:15px;border-radius:10px"
             ),
-            width = 4,
-            style="padding:15px;border-radius:10px"
-          ),
-          width = 8
+            width = 8
+           )
+          )
+      ), #<- end fluid row
+      fluidRow(br(),br()),
+      fluidRow(
+        div(
+          HTML('<iframe width="560" height="315" src="https://www.youtube.com/embed/q_Cd_5dBh3U" title="YouTube video player" margin="20" padding="100" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>'),
+          style="text-align:center;margin-top:100px:margin-bottom:20px;height:400px"
         )
-        
-        )
+      )
+      
     ),
     
     #ANALYSIS TAB
