@@ -12,7 +12,7 @@ ui <- fluidPage(
           h1('Welcome!',
              style = "text-align:center;"),
           div(
-              h4("Are interested in exploring investing opportunities in the stock market?
+              h4("Are you interested in exploring investing opportunities in the stock market?
                   Do you already know about the stock market but you would like to see if it is predictable?
                   Do you just want to learn more about the stock market or prediction algoritghms?",
                 style="text-align:justify;line-height:1.6"),
@@ -330,9 +330,10 @@ ui <- fluidPage(
             column(
               h1('Holt Winters Exponential Smoothing'),
               p("Holt-Winters forecasting is a technique to model and predict the behavior of a time series, and is one of the most popular forecasting 
-                techniques for time series. I will attempt to explain to you, in a high-level and as-easy-as-possible way how it works. To do so we will
+                techniques for time series. I will explain to you in a high-level an easy way how it works. To do so we will
                 go, step by step, through the components of the algorithm: weighted average, exponetial smoothing, Holt exponential smoothing, and Holt 
-                Winters exponential smoothing."),
+                Winters exponential smoothing. If you are interested in a more technical explanation, I would suggest you visit this",
+                tags$a(href="https://otexts.com/fpp2/expsmooth.html","book.")),
               h2("Weighted Average"),
               p("A weighted average is simply an average of numbers where each of the numbers has a higher or smaller influence on the final average. For example, 
                 a weighted average of the numbers [3,5,7] that assigns most influence to the first number, medium influence to the second, and small influence to 
@@ -370,16 +371,23 @@ ui <- fluidPage(
           column(width=2),
           column(
             h1('Prophet Time Series Model'),
-            p("Prophet uses a decomposable time series model with three main model components: growth, seasonality and holidays."),
+            p("Prophet uses a decomposable time series model with three main model components: growth, seasonality and holidays. On this tab, you will find a general
+              overview of how Prophet works. More technical audiences will find this ",tags$a(href="https://peerj.com/preprints/3190.pdf","paper"),"more useful."),
             h2("Growth"),
-            p("Prophet performs a regression using piecewise linear or logistic growth curve trend to detect changes in trends on the data"),
+            p("Prophet performs a regression using piecewise linear or logistic growth curve trend to detect changes in trends on the data. The image below was taken
+              from", tags$a(href="https://research.fb.com/blog/2017/02/prophet-forecasting-at-scale/","Facebook's Prophet blog"), ", and corresponds to a dataset on
+              browsing to Peyton Manning’s page (football season and the playoffs)."),
+            tags$img(src="trend_prophet.png", width ="100%"),
             h2("Seasonality"),
             p("Very similar to the Holt-Winters model, Prophet tries to identify seasonality that can be either yearly, weekly, or daily, 
-              depending on the selected input."),
+              depending on the selected input. The image below was also taken from Facebook's Prophet blog on the same data as the image above."),
+            tags$img(src="yearly_prophet.png", width ="100%"),
             h2("Holidays"),
-            p("Remember the example about the end of the year and the bonuses and how they might have an effect on the stock market? Well, 
-              Prophet tries to take a step further by allowing the user of the algorithm to provide a list of important holidays so that the 
-              model can add influence to the prices on these dates and adjust the model accordingly."),
+            p("Prophet's model allows for the user to provide sepcific dates for holidays that might affect price changes on these speciifc dates. For simplicity,
+              this component was not included in the model that makes the forecasts on this website. The main reason being that the holiday dates will vary as the
+              user chooses different training periods."),
+            br(),
+            br(),
             style="line-height:1.5;font-size:1.2em",
             width = 8)
             ),
