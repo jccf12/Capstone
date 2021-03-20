@@ -76,6 +76,7 @@ ui <- fluidPage(
         helpText("DO NOT CHOOSE WEEKEND DATES"),
         dateInput('start_date_ana', 'Initial date', value = "2018-01-01", max = Sys.Date()),
         dateInput('end_date_ana', 'End date', value = "2020-12-31", max = Sys.Date()),
+        helpText("The prediction horizon refers to the number of days into the future you want to make predictions for."),
         numericInput('h_ana', 'Prediction Horizon', min = 1, value = 180),
         wellPanel(id = "checkbox_panel1",
                   style = "overflow-y:scroll; max-height: 300px",
@@ -146,7 +147,7 @@ ui <- fluidPage(
                  "Stockopedia Risk Ratings")),
         selectInput('risk_level', 'Risk level', risk_levels),
         wellPanel(id = "checkbox_panel2",style = "overflow-y:scroll; max-height: 300px",
-                  checkboxGroupInput('selected_stocks_inv', "Stock Selecton for Virtual Portfolio",
+                  checkboxGroupInput('selected_stocks_inv', "Stock Selection for Virtual Portfolio",
                                      symbols)),
         actionButton('selectStocksButton', 'Select Stocks'),
         helpText("Select an intial investing amount "),
@@ -243,7 +244,7 @@ ui <- fluidPage(
                 On the sidebar panel you will also be able to select the", em("training period"),". The training period will determine the historical data
                 that is given to the models for predictions. This application uses Prophet's Time Series Forecasting by Facebook and Holt Winters Exponential
                 Smoothing. To better understand how these models work, refer to the tabs 'Prophet' and 'Holt'."),
-              p("The models arre used to make predictions about what will happen to the price of the stock in the following days, weeks, or years.
+              p("The models are used to make predictions about what will happen to the price of the stock in the following days, weeks, or years.
                 The", em("prediction horizon") ,"on the sidebar Panel lets you choose how many days into the future you want the models to make the predictions for. 
                 For example, if you choose 180, you are going to obtain what each model predicts is going to happen to the share price of the stocks in the next
                 180 days (around 6 months)."),
@@ -288,6 +289,34 @@ ui <- fluidPage(
               p("Everything said about the Prophet graph (left), applies to the Holt graph (right). In the case of Holt, the model and predictions are shown in
                 shades of blue. The main difference between the two is that the method used to build each of the models is different. For details on how these
                 models make predictions refer to the corresponding tabs."),
+              width = 8)
+          ),
+          fluidRow(
+            column(width=2),
+            column(
+              h1("Portfolio Tab"),
+              p("Now you can move on to the Porfolio Tab to create your own virtual portfolio! To get started, you can choose the risk level you want your portfolio
+                to have which will pre-select some of the companies associated with that risk level, or you can manually choose companies that drew your attention when 
+                playing around on the analysis tab. Once you have selected the companies you wish to have in your portfolio, you will select how much money your want to
+                invest (hypothetically, of course). Then, you will select what fraction of your money you wish to invest in each of the selected companies. You will also
+                have to specify, as you did on the Analysis tab, the training period you want to use for the predictions, and the prediction horizon. Then, use the sliders
+                to select the fraction of the investment amount that will be assigned to each of the companies you selected. By default, the amount is distributed equally 
+                among all the companies, but you can change this if you want to favor some companies over others (by the way, don't worry if the values in the sliders do not
+                add up to 100%, the app takes care of doing that for you)."),
+              h2("How to Interpret Graphs"),
+              br(),
+              tags$img(src="how_to2.png", width ="100%"),
+              br(),
+              p("The pie chart will show you the distribution of your portfolio among the selected companies. In the example shown above, I chose a High Risk Portfolio and
+                an initial investment amount of $100 USD. The training period and prediction horizon where the left at their default values."),
+              tags$img(src="how_to3.png", width ="100%"),
+              br(),
+              br(),
+              p("The top two graphs show how the portfolio value changed throughout the 60 days chosen as the prediction horizon as well as the prediction of the porfolio
+                values according to the Prophet model (left) and the Holt Winters model (right). The two bottom graphs show how each of the individual companies changed in 
+                value throughout the same period. This will allow you to see whether a given company was the main responsible for your profit or for losing money. On the 
+                Portfolio tab, you can hover over both of these graphs to see more detailed information about the values displayed (for example, the exact value of your 
+                portfolio at an exact date and the exact prediction at that date, or the name of the company that corresponds to a given color in two bottom graphs."),
               br(),
               width = 8)
           ),
