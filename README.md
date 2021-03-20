@@ -48,7 +48,15 @@ install.packages("readr")
 install.packages("shinythemes")
 ```
 
-## Usage
+## Usage of the App
+
+Video in English
+
+[![ENGLISH VIDEO](images/youtube_english.png](https://www.youtube.com/watch?v=q_Cd_5dBh3U&ab_channel=JuanCastroFernandez)
+
+Video in Spanish
+
+[![SPANISH VIDEO](images/youtube_spanish.png](https://www.youtube.com/watch?v=F4YSGjXjZfY&ab_channel=JuanCastroFernandez)
 
 ## Getting help
 
