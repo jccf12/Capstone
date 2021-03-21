@@ -17,6 +17,7 @@ If you are interested in knowing more about how I built the application, please 
 
 ## White Paper
 
+https://drive.google.com/file/d/1D5OdfQrE38WrXl_EfVxfU-1vvVNrv-MO/view?usp=sharing
 
 ## Installation
 
