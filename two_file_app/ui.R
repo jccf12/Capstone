@@ -400,6 +400,20 @@ ui <- fluidPage(
             width = 8)
             ),
           icon = icon("chart-line")
+        ),
+        tabPanel(
+          id= 'about-me-tab',
+          title = 'About Me',
+          fluidRow(
+            column(width=2),
+            column(
+              br(),br(),br(),
+              p('My name is Juan Castro Fernandez and I created this application as my undergraduate thesis at Minerva Schools at KGI.'),
+              p('If you have questions or comments you can send me an email at: juan.castrofernandez@minerva.kgi.edu'),
+              p('The github repository of the code can be found ', tags$a(href="https://github.com/jccf12/Capstone","here.")),
+              width=8
+            )
+          ) #<- end fluidRow
         )
       ) # <- end tabsetPanel 'about-inner-tabset'
     ) # <-- end tabPanel 'about-tab'
