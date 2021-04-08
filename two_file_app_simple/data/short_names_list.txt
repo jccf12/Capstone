@@ -1,0 +1,15 @@
+Apple
+Microsoft
+Facebook
+Tesla
+Visa
+Johnson & Johnson
+Mastercard
+UnitedHealth Group
+Bank of America
+PayPal
+Pfizer
+The Coca-Cola Company
+Netflix
+Salesforce
+PepsiCo

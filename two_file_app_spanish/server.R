@@ -628,12 +628,22 @@ server <- function(input, output, session) {
           )
         )
         
-        profit <- round(tail(main_prophet_future$combined_y_test,1), digits = 2) - input_init_capital()
-        if (profit >= 0) {
-          text_in_title = paste0("Genial! Tuviste una ganacia de $", profit," con este portafolio virtual en el transcurso de ",h_Portfolio()," días.\n\n")
+        if (end_date_port()+h_Portfolio() > Sys.Date()) {
+          profit <- F
         } else {
-          text_in_title = paste0("Oh no! Tuviste una pérdida de $", -profit, " con este portafolio virtual en el transcurso de ",h_Portfolio()," días.\n\n")
+          profit <- round(tail(main_prophet_future$combined_y_test,1), digits = 2) - input_init_capital()
         }
+        
+        if (profit) {
+          if (profit >= 0) {
+            text_in_title = paste0("Genial! Tuviste una ganacia de $", profit," con este portafolio virtual en el transcurso de ",h_Portfolio()," días.\n\n")
+          } else {
+            text_in_title = paste0("Oh no! Tuviste una pérdida de $", -profit, " con este portafolio virtual en el transcurso de ",h_Portfolio()," días.\n\n")
+          }
+        } else {
+          text_in_title = paste0("El horizonte de predicción se extiende más allá de la actualidad, por lo que solo están disponibles las predicciones. La ganancia o pérdida real no se puede calcular.")
+        }
+        
         
         subplot(prophet_plotly_combined, holt_plotly_combined,  prophet_plotly, holt_plotly, nrows = 2, margin=0.08, titleX = TRUE, titleY=TRUE, shareY=F) %>% layout(
           title = list(
